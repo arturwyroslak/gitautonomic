@@ -1,2 +1,74 @@
 import 'dotenv/config';
-export const cfg = { appId: process.env.GITHUB_APP_ID!, privateKey: (process.env.GITHUB_APP_PRIVATE_KEY || '').replace(/\\n/g, '\\n'), webhookSecret: process.env.GITHUB_WEBHOOK_SECRET!, dbUrl: process.env.DATABASE_URL!, redisUrl: process.env.REDIS_URL!, openaiKey: process.env.OPENAI_API_KEY, customEndpoint: process.env.CUSTOM_LLM_ENDPOINT, customKey: process.env.CUSTOM_LLM_API_KEY, embeddingsModel: process.env.EMBEDDINGS_MODEL || 'text-embedding-3-small', defaultModel: 'gpt-4o-mini', maxPlanTokens: 1600, execTokens: 1800, planCheck: 'ai-plan', execCheck: 'ai-exec', progressCheck: 'ai-progress', completeCheck: 'ai-complete', securityCheck: 'ai-security', coverageCheck: 'ai-coverage', evalCheck: 'ai-eval', planMarkers: { start: '<!-- TASKS-STRUCTURED -->', end: '<!-- /TASKS-STRUCTURED -->' }, adaptive: { confidenceIncreasePerSuccess: 0.07, confidenceDecreaseOnFail: 0.1, minBatch: 1, maxBatch: 10 }, termination: { requiredConfidence: 0.92 }, diff: { maxBytes: 48000, maxDeletesRatio: 0.45 }, risk: { highThreshold: parseFloat(process.env.RISK_HIGH_THRESHOLD || '0.7') }, coverage: { minLines: parseFloat(process.env.COVERAGE_MIN_LINES || '0.75') }, workspace: { tempRoot: process.env.AGENT_WORK_ROOT || '/tmp/ai-agent-work' }, semgrep: { configPath: '.semgrep.yml', failOnSeverity: 'ERROR' } };
+
+export const cfg = {
+  appId: process.env.GITHUB_APP_ID!,
+  privateKey: (process.env.GITHUB_APP_PRIVATE_KEY || '').replace(/\\n/g, '\\n'),
+  webhookSecret: process.env.GITHUB_WEBHOOK_SECRET!,
+  dbUrl: process.env.DATABASE_URL!,
+  redisUrl: process.env.REDIS_URL!,
+  openaiKey: process.env.OPENAI_API_KEY,
+  customEndpoint: process.env.CUSTOM_LLM_ENDPOINT,
+  customKey: process.env.CUSTOM_LLM_API_KEY,
+  embeddingsModel: process.env.EMBEDDINGS_MODEL || 'text-embedding-3-small',
+  defaultModel: 'gpt-4o-mini',
+
+  maxPlanTokens: 2200,
+  execTokens: 2400,
+
+  planMarkers: { start: '<!-- TASKS-STRUCTURED -->', end: '<!-- /TASKS-STRUCTURED -->' },
+
+  adaptive: {
+    confidenceIncreasePerSuccess: 0.07,
+    confidenceDecreaseOnFail: 0.1,
+    minBatch: 1,
+    maxBatch: 12,
+    dynamicRiskWeight: 0.35,
+    exploitationBias: 0.55, // (0-1) większa wartość => preferuj już skuteczne wzorce decyzyjne
+  },
+
+  termination: {
+    requiredConfidence: 0.94,
+    maxIdleIterations: 4
+  },
+
+  diff: { maxBytes: 64000, maxDeletesRatio: 0.45 },
+
+  risk: {
+    highThreshold: parseFloat(process.env.RISK_HIGH_THRESHOLD || '0.7'),
+    escalateThreshold: 0.85
+  },
+
+  coverage: {
+    minLines: parseFloat(process.env.COVERAGE_MIN_LINES || '0.75'),
+    targetLines: 0.82
+  },
+
+  workspace: {
+    tempRoot: process.env.AGENT_WORK_ROOT || '/tmp/ai-agent-work'
+  },
+
+  semgrep: {
+    configPath: '.semgrep.yml',
+    failOnSeverity: 'ERROR'
+  },
+
+  memory: {
+    maxStrategic: 24,
+    maxTechnical: 120,
+    compressionEvery: 5,
+    minSalienceForRetention: 0.42,
+    decayIntervalMs: 1000 * 60 * 30
+  },
+
+  reasoning: {
+    traceEnabled: true,
+    keepLastPerPhase: 6,
+    metaRefineEvery: 3
+  },
+
+  eval: {
+    autoExpand: true,
+    maxNewTasksPerEval: 4,
+    confidenceGate: 0.55
+  }
+};
