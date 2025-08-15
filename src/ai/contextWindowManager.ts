@@ -1,45 +1,50 @@
-import { PlanTask } from "../types.js";
+import { cfg } from '../config.js';
 
-interface SourceChunk { id: string; size: number; text: string; relevance: number; }
+export interface Chunk {
+  id: string;
+  text: string;
+  tokenEstimate: number;
+}
 
 export class ContextWindowManager {
-  constructor(private maxChars: number) {}
-
-  trimFiles(files: { path: string; content: string }[], tasks: PlanTask[]): { path: string; content: string }[] {
-    const needed = new Set<string>();
-    tasks.forEach(t => t.paths.forEach(p => needed.add(p)));
-    const prioritized = files.map(f => {
-      const direct = needed.has(f.path) ? 1 : 0;
-      const sizePenalty = f.content.length / 8000;
-      const relevance = direct ? 2 - sizePenalty : Math.max(0.1, 1 - sizePenalty);
-      return { ...f, relevance };
-    }).sort((a,b)=> b.relevance - a.relevance);
-
-    const result: { path: string; content: string }[] = [];
-    let acc = 0;
-    for (const f of prioritized) {
-      if (acc + f.content.length > this.maxChars) break;
-      result.push(f);
-      acc += f.content.length;
-    }
-    return result;
+  maxTokens: number;
+  safetyMargin: number;
+  constructor(maxTokens = cfg.model.maxContextTokens ?? 16000, safetyMargin = 0.1) {
+    this.maxTokens = maxTokens;
+    this.safetyMargin = safetyMargin;
   }
-
-  packReasoning(chains: string[]): string {
-    const joined: SourceChunk[] = chains.map((c,i)=> ({
-      id: `R${i}`,
-      size: c.length,
-      text: c,
-      relevance: 1 - (i * 0.05)
-    }));
-    joined.sort((a,b)=> b.relevance - a.relevance);
-    const out: string[] = [];
-    let acc = 0;
-    for (const j of joined) {
-      if (acc + j.size > this.maxChars * 0.35) break;
-      out.push(j.text);
-      acc += j.size;
+  estimateTokens(text: string) { return Math.ceil(text.length / 4); }
+  chunk(text: string, opts: { targetPerChunk?: number } = {}): Chunk[] {
+    const target = opts.targetPerChunk ?? Math.floor(this.maxTokens * (1 - this.safetyMargin) / 4);
+    const chunks: Chunk[] = [];
+    let current: string[] = [];
+    let currentLen = 0;
+    const words = text.split(/(\s+)/);
+    for (const w of words) {
+      if (currentLen + w.length > target && current.length) {
+        const joined = current.join('');
+        chunks.push({ id: String(chunks.length), text: joined, tokenEstimate: this.estimateTokens(joined) });
+        current = [];
+        currentLen = 0;
+      }
+      current.push(w);
+      currentLen += w.length;
     }
-    return out.join('\n---\n');
+    if (current.length) {
+      const joined = current.join('');
+      chunks.push({ id: String(chunks.length), text: joined, tokenEstimate: this.estimateTokens(joined) });
+    }
+    return chunks;
+  }
+  trimToFit(prefix: string, body: string, suffix = ''): { text: string; truncated: boolean } {
+    const total = prefix + body + suffix;
+    if (this.estimateTokens(total) <= this.maxTokens * (1 - this.safetyMargin)) {
+      return { text: total, truncated: false };
+    }
+    const allowed = Math.floor(this.maxTokens * (1 - this.safetyMargin) * 4); // char heuristic
+    const bodyAllowed = Math.max(0, allowed - (prefix.length + suffix.length));
+    return { text: prefix + body.slice(0, bodyAllowed) + suffix, truncated: true };
   }
 }
+
+export default { ContextWindowManager };
