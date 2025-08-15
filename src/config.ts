@@ -23,7 +23,7 @@ export const cfg = {
     minBatch: 1,
     maxBatch: 12,
     dynamicRiskWeight: 0.35,
-    exploitationBias: 0.55, // (0-1) większa wartość => preferuj już skuteczne wzorce decyzyjne
+    exploitationBias: 0.55
   },
 
   termination: {
@@ -31,7 +31,13 @@ export const cfg = {
     maxIdleIterations: 4
   },
 
-  diff: { maxBytes: 64000, maxDeletesRatio: 0.45 },
+  diff: {
+    maxBytes: 64000,
+    maxDeletesRatio: 0.45,
+    maxFilePctChangeMinor: 0.35,   // powyżej tego procentu zmian jeśli task ma niskie ryzyko -> dodatkowa walidacja
+    largeFileLineThreshold: 800,
+    maxTotalFilesPerIter: 24
+  },
 
   risk: {
     highThreshold: parseFloat(process.env.RISK_HIGH_THRESHOLD || '0.7'),
@@ -70,5 +76,19 @@ export const cfg = {
     autoExpand: true,
     maxNewTasksPerEval: 4,
     confidenceGate: 0.55
+  },
+
+  git: {
+    defaultBase: 'main',
+    commitAuthorName: 'AI Agent',
+    commitAuthorEmail: 'ai-agent@example.local',
+    pullRequestTitlePrefix: 'AI Agent:',
+    autoPRCreate: true
+  },
+
+  patch: {
+    enableRefineForLarge: true,
+    largePatchLineThreshold: 400,
+    refineTemperature: 0.1
   }
 };
