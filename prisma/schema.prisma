@@ -1,14 +1,150 @@
 generator client { provider = "prisma-client-js" }
 datasource db { provider = "postgresql" url = env("DATABASE_URL") }
 
-model InstallationConfig { id String @id installationId BigInt @unique provider String model String endpoint String? apiKeyHash String? maxTasksPerIter Int @default(4) maxTotalIter Int @default(50) adaptiveness Json @default(json('{"enabled":true}')) createdAt DateTime @default(now()) updatedAt DateTime @updatedAt }
+model InstallationConfig {
+  id              String  @id
+  installationId  BigInt  @unique
+  provider        String
+  model           String
+  endpoint        String?
+  apiKeyHash      String?
+  maxTasksPerIter Int     @default(4)
+  maxTotalIter    Int     @default(50)
+  adaptiveness    Json    @default(json('{"enabled":true}'))
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
 
-model IssueAgent { id String @id installationId BigInt owner String repo String issueNumber Int issueTitle String issueBodyHash String branchName String prNumber Int? planCommitSha String? planVersion Int @default(1) planHash String? expansions Int @default(0) totalTasks Int @default(0) doneTasks Int @default(0) iterations Int @default(0) confidence Float @default(0) phase String @default("executing") blocked Boolean @default(false) completed Boolean @default(false) lastIterAt DateTime? lastEvalAt DateTime? coverageLines Float? coverageStmts Float? coverageBranches Float? coverageFuncs Float? createdAt DateTime @default(now()) updatedAt DateTime @updatedAt tasks Task[] iterationsLog Iteration[] embeddings IssueEmbedding[] @@index([installationId, owner, repo, issueNumber]) }
+model IssueAgent {
+  id              String  @id
+  installationId  BigInt
+  owner           String
+  repo            String
+  issueNumber     Int
+  issueTitle      String
+  issueBodyHash   String
+  branchName      String
+  prNumber        Int?
+  planCommitSha   String?
+  planVersion     Int      @default(1)
+  planHash        String?
+  expansions      Int      @default(0)
+  totalTasks      Int      @default(0)
+  doneTasks       Int      @default(0)
+  iterations      Int      @default(0)
+  confidence      Float    @default(0)
+  phase           String   @default("executing")
+  blocked         Boolean  @default(false)
+  completed       Boolean  @default(false)
+  lastIterAt      DateTime?
+  lastEvalAt      DateTime?
+  coverageLines   Float?
+  coverageStmts   Float?
+  coverageBranches Float?
+  coverageFuncs    Float?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-model Task { id String @id issueAgentId String externalId String parentExternalId String? title String type String paths String[] riskScore Float @default(0) origin String @default("initial") status String @default("pending") acceptance String? orderIndex Int generatedAtIteration Int? createdAt DateTime @default(now()) updatedAt DateTime @default(now()) issueAgent IssueAgent @relation(fields: [issueAgentId], references: [id], onDelete: Cascade) @@index([issueAgentId, status]) @@index([issueAgentId, parentExternalId]) }
+  tasks           Task[]
+  iterationsLog   Iteration[]
+  embeddings      IssueEmbedding[]
+  memories        AgentMemory[]
+  reasoningTraces ReasoningTrace[]
 
-model Iteration { id String @id issueAgentId String number Int executedTasks String[] commitSha String? success Boolean deltaConfidence Float @default(0) errorMessage String? createdAt DateTime @default(now()) issueAgent IssueAgent @relation(fields: [issueAgentId], references: [id], onDelete: Cascade) @@index([issueAgentId, number]) }
+  @@index([installationId, owner, repo, issueNumber])
+}
 
-model IssueEmbedding { id String @id issueAgentId String scope String referenceId String? vector Json model String createdAt DateTime @default(now()) issueAgent IssueAgent @relation(fields: [issueAgentId], references: [id], onDelete: Cascade) @@index([issueAgentId, scope]) }
+model Task {
+  id                  String  @id
+  issueAgentId        String
+  externalId          String
+  parentExternalId    String?
+  title               String
+  type                String
+  paths               String[]
+  riskScore           Float   @default(0)
+  origin              String  @default("initial")
+  status              String  @default("pending")
+  acceptance          String?
+  orderIndex          Int
+  generatedAtIteration Int?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  issueAgent          IssueAgent @relation(fields: [issueAgentId], references: [id], onDelete: Cascade)
 
-model FileEmbedding { id String @id installationId BigInt owner String repo String path String blobSha String vector Json model String updatedAt DateTime @default(now()) @@unique([installationId, owner, repo, path]) @@index([installationId, owner, repo]) }
+  @@index([issueAgentId, status])
+  @@index([issueAgentId, parentExternalId])
+}
+
+model Iteration {
+  id            String  @id
+  issueAgentId  String
+  number        Int
+  executedTasks String[]
+  commitSha     String?
+  success       Boolean
+  deltaConfidence Float @default(0)
+  errorMessage  String?
+  createdAt     DateTime @default(now())
+  issueAgent    IssueAgent @relation(fields: [issueAgentId], references: [id], onDelete: Cascade)
+
+  @@index([issueAgentId, number])
+}
+
+model IssueEmbedding {
+  id           String @id
+  issueAgentId String
+  scope        String
+  referenceId  String?
+  vector       Json
+  model        String
+  createdAt    DateTime @default(now())
+  issueAgent   IssueAgent @relation(fields: [issueAgentId], references: [id], onDelete: Cascade)
+
+  @@index([issueAgentId, scope])
+}
+
+model FileEmbedding {
+  id            String @id
+  installationId BigInt
+  owner         String
+  repo          String
+  path          String
+  blobSha       String
+  vector        Json
+  model         String
+  updatedAt     DateTime @default(now())
+
+  @@unique([installationId, owner, repo, path])
+  @@index([installationId, owner, repo])
+}
+
+model AgentMemory {
+  id           String @id
+  issueAgentId String
+  type         String   // strategic | technical | risk | evaluation | compression
+  vectorRef    String?  // opcjonalnie odniesienie do embeddingu
+  content      Json
+  salience     Float    @default(0.5)
+  decayFactor  Float    @default(0.98)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  issueAgent   IssueAgent @relation(fields: [issueAgentId], references: [id], onDelete: Cascade)
+
+  @@index([issueAgentId, type])
+  @@index([issueAgentId, salience])
+}
+
+model ReasoningTrace {
+  id           String @id
+  issueAgentId String
+  iteration    Int
+  phase        String   // planning | execution | evaluation | meta
+  tokens       Int?
+  score        Float?
+  content      Json     // { chain: [...], decisions: [...], rationale: "..."}
+  createdAt    DateTime @default(now())
+  issueAgent   IssueAgent @relation(fields: [issueAgentId], references: [id], onDelete: Cascade)
+
+  @@index([issueAgentId, iteration])
+}
