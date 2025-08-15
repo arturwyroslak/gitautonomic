@@ -8,7 +8,7 @@ import { scheduleActiveAgents } from './services/loopScheduler.js';
 const log = pino({ level: process.env.LOG_LEVEL || 'info' });
 
 async function init() {
-  log.info('Worker starting with adaptive loop enabled');
+  log.info('Worker starting with adaptive loop + git/diff engine');
 
   planQueue.process(async job => {
     const { owner, repo, issueNumber } = job.data;
