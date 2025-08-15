@@ -84,3 +84,51 @@ export interface Provider {
   explodeTask?(ctx: ProviderExplodeContext): Promise<ExplodeResult>;
   metaRefinePrompt?(rawPrompt: string, phase: string): Promise<string>;
 }
+
+/* Patch / diff domain */
+export interface ParsedDiffFile {
+  oldPath: string | null;
+  newPath: string | null;
+  isNew: boolean;
+  isDeleted: boolean;
+  isRename: boolean;
+  hunks: DiffHunk[];
+  added: number;
+  deleted: number;
+}
+
+export interface DiffHunk {
+  header: string;
+  oldStart: number;
+  oldLines: number;
+  newStart: number;
+  newLines: number;
+  lines: string[];
+}
+
+export interface ParsedDiff {
+  files: ParsedDiffFile[];
+  totalAdded: number;
+  totalDeleted: number;
+}
+
+export interface PatchValidationResult {
+  ok: boolean;
+  reasons: string[];
+  fileStats: {
+    added: number;
+    deleted: number;
+    modified: number;
+    created: number;
+    deletedFiles: number;
+    renamed: number;
+    largeFileTouches: string[];
+  };
+}
+
+export interface ApplyPatchOutcome {
+  applied: boolean;
+  failedFiles: string[];
+  commitSha?: string;
+  validation: PatchValidationResult;
+}
