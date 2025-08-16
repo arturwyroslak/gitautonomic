@@ -9,7 +9,7 @@ export interface Chunk {
 export class ContextWindowManager {
   maxTokens: number;
   safetyMargin: number;
-  constructor(maxTokens = cfg.model?.maxContextTokens ?? 16000, safetyMargin = 0.1) {
+  constructor(maxTokens = 16000, safetyMargin = 0.1) {
     this.maxTokens = maxTokens;
     this.safetyMargin = safetyMargin;
   }

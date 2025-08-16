@@ -57,7 +57,9 @@ export class WorkspaceManager {
   
   async applyPatch(patch: string, dir = this.root): Promise<{ ok: boolean; stderr?: string }> {
     try {
-      await exec('git apply -', { cwd: dir, input: patch as any });
+      const process = await cpExec('git apply', { cwd: dir });
+      process.stdin?.write(patch);
+      process.stdin?.end();
       return { ok: true };
     } catch (e: any) {
       return { ok: false, stderr: e.stderr || e.message };

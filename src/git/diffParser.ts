@@ -32,23 +32,23 @@ export function parseUnifiedDiff(diff: string): ParsedDiff {
     const fh = fileHeaderRegex.exec(line);
     if (fh) {
       if (current) files.push(current);
-      current = { oldPath: fh[1], newPath: fh[2], added: 0, deleted: 0, hunks: [] };
+      current = { oldPath: fh[1] || null, newPath: fh[2] || null, isNew: false, isDeleted: false, isRename: false, added: 0, deleted: 0, hunks: [] };
       continue;
     }
     if (!current) continue;
     if (newFileRegex.test(line)) current.isNew = true;
     else if (deletedFileRegex.test(line)) current.isDeleted = true;
-    else if (renameFrom.test(line)) { current.isRename = true; current.oldPath = renameFrom.exec(line)![1]; }
-    else if (renameTo.test(line)) { current.isRename = true; current.newPath = renameTo.exec(line)![1]; }
+    else if (renameFrom.test(line)) { current.isRename = true; current.oldPath = renameFrom.exec(line)?.[1] || null; }
+    else if (renameTo.test(line)) { current.isRename = true; current.newPath = renameTo.exec(line)?.[1] || null; }
     else if (hunkHeaderRegex.test(line)) {
       const hunkMatch = hunkHeaderRegex.exec(line);
       if (hunkMatch) {
         current.hunks.push({ 
           header: line, 
-          oldStart: parseInt(hunkMatch[1], 10),
-          oldLines: parseInt(hunkMatch[2], 10),
-          newStart: parseInt(hunkMatch[3], 10),
-          newLines: parseInt(hunkMatch[4], 10),
+          oldStart: parseInt(hunkMatch[1] || '0', 10),
+          oldLines: parseInt(hunkMatch[2] || '0', 10),
+          newStart: parseInt(hunkMatch[3] || '0', 10),
+          newLines: parseInt(hunkMatch[4] || '0', 10),
           lines: [] 
         });
       }

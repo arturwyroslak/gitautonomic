@@ -48,12 +48,12 @@ export async function runAdaptiveIteration(agentId: string) {
 
   await ensureAgentBranch(agent.id);
 
-  const pending = agent.tasks.filter(t => t.status === 'pending');
+  const pending = agent.tasks.filter((t: any) => t.status === 'pending');
   if (!pending.length) return;
 
   const batchSize = decideBatch(agent as any, pending as any);
   const selected = pending
-    .sort((a,b)=> (a.riskScore ?? 0) - (b.riskScore ?? 0))
+    .sort((a: any, b: any)=> (a.riskScore ?? 0) - (b.riskScore ?? 0))
     .slice(0, batchSize);
 
   const strategicBundle = await fetchStrategicBundle(agent.id);
@@ -63,7 +63,7 @@ export async function runAdaptiveIteration(agentId: string) {
     inputs: {
       iteration: agent.iterations,
       confidence: agent.confidence,
-      risks: selected.map(s=> s.riskScore ?? 0)
+      risks: selected.map((s: any)=> s.riskScore ?? 0)
     }
   });
 
@@ -126,7 +126,7 @@ export async function runAdaptiveIteration(agentId: string) {
       const { failed } = await applyParsedDiff(ws, parsed);
       if (!failed.length) {
         await wm.stageAll(ws);
-        commitSha = await wm.commit(ws, `agent: tasks ${selected.map(t=>t.externalId).join(', ')}`);
+        commitSha = await wm.commit(ws, `agent: tasks ${selected.map((t: any)=>t.externalId).join(', ')}`);
         if (commitSha && !commitSha.startsWith('fatal')) {
           await wm.push(ws, agent.branchName);
           applied = true;
@@ -149,7 +149,7 @@ export async function runAdaptiveIteration(agentId: string) {
   await logPatch({
     issueAgentId: agent.id,
     iteration: agent.iterations,
-    tasks: selected.map(t => t.externalId),
+    tasks: selected.map((t: any) => t.externalId),
     diff: execResult.diff || '',
     validation,
     applied,
@@ -197,6 +197,7 @@ export async function ensurePlan(agentId: string) {
   const tasks = extractPlanTasks(planRaw);
   for (let i=0;i<tasks.length;i++){
     const t = tasks[i];
+    if (!t) continue;
     await prisma.task.create({
       data: {
         id: `${agent.id}_${t.id}`,

@@ -51,7 +51,7 @@ export async function selectiveRetention(issueAgentId: string) {
       skip: max
     });
     if (items.length) {
-      await prisma.agentMemory.deleteMany({ where: { id: { in: items.map(i => i.id) } } });
+      await prisma.agentMemory.deleteMany({ where: { id: { in: items.map((i: any) => i.id) } } });
     }
   }
 }
@@ -74,8 +74,8 @@ export async function compressStrategic(issueAgentId: string) {
   const evaluation = await listTopMemories(issueAgentId, 'evaluation', 5);
   const text = [
     'SYNTHESIS:',
-    ...strategic.map(s => `S:${JSON.stringify(s.content)}`),
-    ...evaluation.map(e => `E:${JSON.stringify(e.content)}`)
+    ...strategic.map((s: any) => `S:${JSON.stringify(s.content)}`),
+    ...evaluation.map((e: any) => `E:${JSON.stringify(e.content)}`)
   ].join('\n').slice(0, 4000);
   await addMemory({
     issueAgentId,

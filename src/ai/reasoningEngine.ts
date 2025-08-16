@@ -34,7 +34,7 @@ export class ReasoningEngine {
     try { return JSON.parse(raw); } catch { return []; }
   }
   async reflectiveLoop(task: string, context: string, opts: { maxRounds?: number } = {}) {
-    const maxRounds = opts.maxRounds ?? cfg.reasoning.maxRounds ?? 5;
+    const maxRounds = opts.maxRounds ?? 5;
     const history: any[] = [];
     for (let i=0;i<maxRounds;i++) {
       const prompt = renderTemplate('reasoning_step', {

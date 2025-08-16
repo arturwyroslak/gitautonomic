@@ -19,7 +19,7 @@ export class MemoryStore {
     return item;
   }
   list(type?: string) { return Array.from(this.items.values()).filter(i => !type || i.type === type); }
-  similarity(a: number[] = [], b: number[] = []) { return a.length && b.length ? a.reduce((s,v,i)=>s+v*b[i],0) / (Math.sqrt(a.reduce((s,v)=>s+v*v,0))*Math.sqrt(b.reduce((s,v)=>s+v*v,0))) : 0; }
+  similarity(a: number[] = [], b: number[] = []) { return a.length && b.length ? a.reduce((s,v,i)=>s+v*(b[i] ?? 0),0) / (Math.sqrt(a.reduce((s,v)=>s+v*v,0))*Math.sqrt(b.reduce((s,v)=>s+v*v,0))) : 0; }
   async search(query: string, k = 5): Promise<MemoryItem[]> {
     const qv = this.embedder ? await this.embedder(query) : undefined;
     const scored = this.list().map(m => ({ m, score: qv && m.vector ? this.similarity(qv, m.vector) : 0 }));
