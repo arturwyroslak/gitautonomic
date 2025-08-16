@@ -428,4 +428,4 @@ export class EnhancedPlanningService {
   }
 }
 
-export { PlanConflict, StakeholderReview };
+// Types are already exported inline above

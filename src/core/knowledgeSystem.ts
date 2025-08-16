@@ -141,9 +141,11 @@ export class VectorEmbeddingStore {
     let normB = 0;
     
     for (let i = 0; i < a.length; i++) {
-      dotProduct += a[i] * b[i];
-      normA += a[i] * a[i];
-      normB += b[i] * b[i];
+      const aVal = a[i] ?? 0;
+      const bVal = b[i] ?? 0;
+      dotProduct += aVal * bVal;
+      normA += aVal * aVal;
+      normB += bVal * bVal;
     }
     
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
@@ -391,9 +393,13 @@ export class KnowledgeGraph {
   private calculatePathWeight(path: string[]): number {
     let weight = 1;
     for (let i = 0; i < path.length - 1; i++) {
-      const relationship = this.adjacencyList.get(path[i])?.get(path[i + 1]);
-      if (relationship) {
-        weight *= relationship.weight;
+      const currentNode = path[i];
+      const nextNode = path[i + 1];
+      if (currentNode && nextNode) {
+        const relationship = this.adjacencyList.get(currentNode)?.get(nextNode);
+        if (relationship) {
+          weight *= relationship.weight;
+        }
       }
     }
     return weight;
@@ -548,11 +554,4 @@ interface FeedbackEvent {
   processed: boolean;
 }
 
-export {
-  EmbeddingDocument,
-  KnowledgeNode,
-  KnowledgeRelationship,
-  SemanticSearchResult,
-  EmbeddingModel,
-  FeedbackEvent
-};
+// Types are already exported inline above

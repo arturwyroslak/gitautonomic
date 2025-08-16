@@ -382,15 +382,15 @@ export class EnhancedSecurityEngine extends PolicyEngine {
 
   private async executeCommand(command: string, args: string[], cwd?: string): Promise<{ stdout: string; stderr: string }> {
     return new Promise((resolve, reject) => {
-      const child = spawn(command, args, { cwd, capture: ['stdout', 'stderr'] });
+      const child = spawn(command, args, { cwd });
       
       let stdout = '';
       let stderr = '';
       
-      child.stdout?.on('data', (data) => stdout += data);
-      child.stderr?.on('data', (data) => stderr += data);
+      child.stdout?.on('data', (data: any) => stdout += data);
+      child.stderr?.on('data', (data: any) => stderr += data);
       
-      child.on('close', (code) => {
+      child.on('close', (code: any) => {
         if (code === 0) {
           resolve({ stdout, stderr });
         } else {
@@ -436,4 +436,4 @@ export class EnhancedSecurityEngine extends PolicyEngine {
   }
 }
 
-export { SecurityScanResult, SecurityFinding, OwnershipRule };
+// Types are already exported inline above

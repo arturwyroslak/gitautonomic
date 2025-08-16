@@ -94,8 +94,8 @@ export class ASTRefiner {
           'dynamicImport',
           'nullishCoalescingOperator',
           'optionalChaining',
-          ...(isTypeScript ? ['typescript'] : []),
-          ...(isJSX ? ['jsx'] : [])
+          ...(isTypeScript ? ['typescript' as const] : []),
+          ...(isJSX ? ['jsx' as const] : [])
         ]
       });
     } catch (error) {
@@ -533,4 +533,4 @@ export class AssetProcessor {
   }
 }
 
-export { ASTModification, ASTTarget, TemplateContext };
+// Types are already exported inline above

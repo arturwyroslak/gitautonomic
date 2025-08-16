@@ -475,7 +475,7 @@ export class DashboardService {
       take: 50
     });
 
-    return logs.map(log => ({
+    return logs.map((log: any) => ({
       timestamp: log.timestamp,
       agentId: log.agentId,
       event: log.event,
@@ -507,4 +507,4 @@ export class DashboardService {
   }
 }
 
-export { CheckRunConfig, CheckAnnotation, StructuredComment, DashboardMetrics, ActivityLog };
+// Types are already exported inline above
