@@ -601,7 +601,7 @@ export class AdaptiveStrategySelector {
   private evaluateBigBangDevelopment(analysis: ProjectAnalysis, task: string): StrategyEvaluation {
     let confidence = 0.4;
     let applicability = 0.3;
-    let effortMultiplier = 1.5;
+    const effortMultiplier = 1.5;
 
     // Higher confidence with experienced teams
     if (analysis.teamCapabilities.experienceLevel === 'expert') confidence += 0.3;
@@ -630,7 +630,7 @@ export class AdaptiveStrategySelector {
   private evaluateFeatureFlagging(analysis: ProjectAnalysis, task: string): StrategyEvaluation {
     let confidence = 0.8;
     let applicability = 0.7;
-    let effortMultiplier = 1.2;
+    const effortMultiplier = 1.2;
 
     // Higher confidence with good infrastructure
     if (analysis.technicalContext.cicdMaturity === 'advanced') confidence += 0.15;
@@ -656,7 +656,7 @@ export class AdaptiveStrategySelector {
   private evaluateBlueGreenDeployment(analysis: ProjectAnalysis, task: string): StrategyEvaluation {
     let confidence = 0.6;
     let applicability = 0.4;
-    let effortMultiplier = 2.0;
+    const effortMultiplier = 2.0;
 
     // Higher confidence with cloud infrastructure
     if (analysis.technicalContext.infrastructure === 'cloud') confidence += 0.2;
@@ -682,7 +682,7 @@ export class AdaptiveStrategySelector {
   private evaluateTestDrivenDevelopment(analysis: ProjectAnalysis, task: string): StrategyEvaluation {
     let confidence = 0.7;
     let applicability = 0.6;
-    let effortMultiplier = 1.3;
+    const effortMultiplier = 1.3;
 
     // Higher confidence with good existing test coverage
     if (analysis.codebaseCharacteristics.testCoverage > 80) confidence += 0.2;
@@ -706,9 +706,9 @@ export class AdaptiveStrategySelector {
   }
 
   private evaluateBehaviorDrivenDevelopment(analysis: ProjectAnalysis, task: string): StrategyEvaluation {
-    let confidence = 0.6;
+    const confidence = 0.6;
     let applicability = 0.5;
-    let effortMultiplier = 1.4;
+    const effortMultiplier = 1.4;
 
     // More applicable for business-facing features
     if (task.toLowerCase().includes('user') || task.toLowerCase().includes('business')) {
@@ -731,9 +731,9 @@ export class AdaptiveStrategySelector {
   }
 
   private evaluatePairProgramming(analysis: ProjectAnalysis, task: string): StrategyEvaluation {
-    let confidence = 0.8;
+    const confidence = 0.8;
     let applicability = 0.6;
-    let effortMultiplier = 1.8;
+    const effortMultiplier = 1.8;
 
     // More applicable for knowledge transfer
     if (analysis.teamCapabilities.experienceLevel === 'mixed') applicability += 0.2;
@@ -757,7 +757,7 @@ export class AdaptiveStrategySelector {
   }
 
   private evaluateCodeReviewFocused(analysis: ProjectAnalysis, task: string): StrategyEvaluation {
-    let confidence = 0.9;
+    const confidence = 0.9;
     let applicability = 0.8;
     let effortMultiplier = 0.8;
 
@@ -785,7 +785,7 @@ export class AdaptiveStrategySelector {
   private evaluateMicroservicesApproach(analysis: ProjectAnalysis, task: string): StrategyEvaluation {
     let confidence = 0.5;
     let applicability = 0.3;
-    let effortMultiplier = 3.0;
+    const effortMultiplier = 3.0;
 
     // Higher confidence for large, complex systems
     if (analysis.codebaseCharacteristics.size === 'enterprise') {
@@ -812,9 +812,9 @@ export class AdaptiveStrategySelector {
   }
 
   private evaluateMonolithFirst(analysis: ProjectAnalysis, task: string): StrategyEvaluation {
-    let confidence = 0.8;
+    const confidence = 0.8;
     let applicability = 0.7;
-    let effortMultiplier = 0.6;
+    const effortMultiplier = 0.6;
 
     // Higher applicability for smaller teams/projects
     if (analysis.teamCapabilities.size <= 5) applicability += 0.2;
@@ -838,7 +838,7 @@ export class AdaptiveStrategySelector {
   private evaluateDomainDrivenDesign(analysis: ProjectAnalysis, task: string): StrategyEvaluation {
     let confidence = 0.6;
     let applicability = 0.4;
-    let effortMultiplier = 2.5;
+    const effortMultiplier = 2.5;
 
     // More applicable for complex business domains
     if (analysis.codebaseCharacteristics.complexity === 'very-complex') {
