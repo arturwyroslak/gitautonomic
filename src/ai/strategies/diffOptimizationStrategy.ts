@@ -49,9 +49,10 @@ export function createDiffOptimizationStrategy(): DiffOptimizationStrategy {
       if (!steps.length) {
         steps.push({
           id: 'diff-1',
-            title: 'Produce minimal patch set',
-            rationale: 'Fallback when no specific files identified',
-            type: 'patch'
+          title: 'Produce minimal patch set',
+          rationale: 'Fallback when no specific files identified',
+          type: 'patch',
+          meta: { path: 'general' }
         });
       }
 

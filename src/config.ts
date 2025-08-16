@@ -48,6 +48,12 @@ export const cfg = {
     minLines: parseFloat(process.env.COVERAGE_MIN_LINES || '0.75'),
     targetLines: 0.82
   },
+  security: {
+    maxHighSeverityIssues: 5,
+    semgrepEnabled: true,
+    banditEnabled: true,
+    eslintSecurityEnabled: true
+  },
 
   workspace: {
     tempRoot: process.env.AGENT_WORK_ROOT || '/tmp/ai-agent-work'

@@ -1,5 +1,5 @@
 import { prisma } from "../storage/prisma.js";
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 import { cfg } from "../config.js";
 
 export type MemoryType = 'strategic' | 'technical' | 'risk' | 'evaluation' | 'compression';
