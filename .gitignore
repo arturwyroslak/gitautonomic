@@ -6,3 +6,21 @@ coverage
 tmp
 .idea
 *.log
+
+# Additional ignores for better organization
+build/
+out/
+*.tmp
+*.temp
+*.db
+*.sqlite
+.vscode/
+*.swp
+*.swo
+*~
+.nyc_output/
+jspm_packages/
+pids
+*.pid
+*.seed
+*.pid.lock

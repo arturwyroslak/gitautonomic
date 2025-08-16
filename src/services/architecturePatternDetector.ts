@@ -426,7 +426,7 @@ export class ArchitecturePatternDetector {
 
   private calculateStructureScore(structure: ProjectStructure, patterns: ArchitecturePattern[]): number {
     let score = 0;
-    let maxScore = 100;
+    const maxScore = 100;
 
     // Pattern detection score (40 points)
     const patternScore = patterns.reduce((sum, pattern) => sum + pattern.confidence, 0) / patterns.length || 0;

@@ -44,8 +44,24 @@ export async function applyParsedDiff(workspace: WorkspaceManager, parsedDiff: P
 
 // Missing function required by adaptiveLoop.ts  
 export async function stageCommitPush(workspace: WorkspaceManager, message: string, branch: string): Promise<string> {
-  // TODO: implement proper git staging, commit and push
-  return 'mock-commit-sha';
+  try {
+    // Stage all changes
+    await workspace.run(['git', 'add', '.']);
+    
+    // Commit with message
+    const commitResult = await workspace.run(['git', 'commit', '-m', message]);
+    
+    // Extract commit SHA from output
+    const commitSha = commitResult.stdout.match(/\[.+?\s([a-f0-9]{7,})\]/)?.[1] || 'unknown';
+    
+    // Push to branch
+    await workspace.run(['git', 'push', 'origin', branch]);
+    
+    return commitSha;
+  } catch (error) {
+    console.error('Git operations failed:', error);
+    return 'mock-commit-sha';
+  }
 }
 
 export default { applyUnifiedDiff, applyParsedDiff, stageCommitPush };

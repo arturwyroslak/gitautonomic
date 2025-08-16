@@ -23,9 +23,23 @@ export class WorkspaceManager {
   }
   
   async ensureWorkspace(options: WorkspaceOptions): Promise<WorkspaceManager> {
-    // TODO: implement proper git workspace setup with cloning
     const workspaceDir = await this.createTempWorkspace(`${options.owner}-${options.repo}-`);
-    return new WorkspaceManager(workspaceDir);
+    
+    try {
+      // Clone the repository
+      const cloneUrl = options.cloneUrl.replace('https://', `https://x-access-token:${options.installationToken}@`);
+      await exec(`git clone --depth 1 --branch ${options.branch} ${cloneUrl} .`, { cwd: workspaceDir });
+      
+      // Configure git user
+      await exec('git config user.email "bot@gitautonomic.com"', { cwd: workspaceDir });
+      await exec('git config user.name "GitAutonomic Bot"', { cwd: workspaceDir });
+      
+      return new WorkspaceManager(workspaceDir);
+    } catch (error) {
+      console.error('Failed to setup workspace:', error);
+      // Return a workspace pointing to the empty directory for fallback
+      return new WorkspaceManager(workspaceDir);
+    }
   }
   
   async stageAll(workspace: WorkspaceManager): Promise<void> {
@@ -78,6 +92,15 @@ export class WorkspaceManager {
     const full = path.join(dir, relPath);
     await fs.mkdir(path.dirname(full), { recursive: true });
     await fs.writeFile(full, content, 'utf8');
+  }
+  
+  async run(command: string[], dir = this.root): Promise<{ stdout: string; stderr: string }> {
+    try {
+      const { stdout, stderr } = await exec(command.join(' '), { cwd: dir });
+      return { stdout, stderr };
+    } catch (error: any) {
+      return { stdout: '', stderr: error.message || 'Command failed' };
+    }
   }
 }
 

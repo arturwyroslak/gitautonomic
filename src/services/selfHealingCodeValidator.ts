@@ -1120,7 +1120,7 @@ export class SelfHealingCodeValidator {
   private calculateMaintainabilityIndex(linesOfCode: number, complexity: number): number {
     // Simplified maintainability index
     const halsteadVolume = Math.log2(linesOfCode + 1) * 10;
-    let index = 171 - 5.2 * Math.log(halsteadVolume) - 0.23 * complexity - 16.2 * Math.log(linesOfCode + 1);
+    const index = 171 - 5.2 * Math.log(halsteadVolume) - 0.23 * complexity - 16.2 * Math.log(linesOfCode + 1);
     return Math.max(0, Math.min(100, index));
   }
 
