@@ -90,7 +90,13 @@ export class MultiAgentOrchestrator {
     coordinatorAgent: string;
   }> {
     // Deploy multiple specialized agents for complex tasks
-    const coordination = {
+    const coordination: {
+      frontendAgent?: string;
+      backendAgent?: string;
+      testAgent?: string;
+      securityAgent?: string;
+      coordinatorAgent: string;
+    } = {
       coordinatorAgent: await this.createCoordinatorAgent(task)
     };
 
@@ -562,18 +568,4 @@ export class InnovationSuite {
   }
 }
 
-export {
-  CodeIntelligenceEngine,
-  PredictiveAnalytics,
-  MultiAgentOrchestrator,
-  IntelligentTestGenerator,
-  ContinuousLearningEngine,
-  SmartCodeReviewAssistant,
-  ResourceOptimizationEngine,
-  AdvancedContextEngine,
-  ProactiveIssueDetector,
-  SmartDocumentationGenerator,
-  InnovationSuite,
-  SpecializedAgent,
-  ReviewSuggestion
-};
+// Classes are already exported inline above

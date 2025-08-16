@@ -24,7 +24,7 @@ export class EventRouter {
 
   constructor() {
     this.setupDefaultRules();
-    this.deadLetterQueue = new Queue('dead-letter', { connection: cfg.redis });
+    this.deadLetterQueue = new Queue('dead-letter', { connection: { url: cfg.redisUrl } });
   }
 
   private setupDefaultRules() {
@@ -119,13 +119,13 @@ export class EventRouter {
     // Analyze event to determine type and priority
     if (event.issue) {
       const labels = event.issue.labels?.map((l: any) => l.name.toLowerCase()) || [];
-      if (labels.some(l => l.includes('security') || l.includes('vulnerability'))) {
+      if (labels.some((l: any) => l.includes('security') || l.includes('vulnerability'))) {
         return 'issues:security';
       }
-      if (labels.some(l => l.includes('enhancement') || l.includes('feature'))) {
+      if (labels.some((l: any) => l.includes('enhancement') || l.includes('feature'))) {
         return 'issues:feature';
       }
-      if (labels.some(l => l.includes('tech-debt') || l.includes('refactor'))) {
+      if (labels.some((l: any) => l.includes('tech-debt') || l.includes('refactor'))) {
         return 'issues:tech-debt';
       }
       return 'issues:general';
@@ -145,7 +145,7 @@ export class EventRouter {
   private getOrCreateQueue(name: string): Queue {
     if (!this.queues.has(name)) {
       this.queues.set(name, new Queue(name, { 
-        connection: cfg.redis,
+        connection: { url: cfg.redisUrl },
         defaultJobOptions: {
           removeOnComplete: 50,
           removeOnFail: 20
