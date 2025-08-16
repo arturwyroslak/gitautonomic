@@ -1,5 +1,6 @@
 import pino from 'pino';
-import { planQueue, execQueue, evalQueue, sweepQueue } from './queue.js';
+import { Worker } from 'bullmq';
+import { connection } from './queue.js';
 import { ensurePlan, runAdaptiveIteration } from './ai/adaptiveLoop.js';
 import { evaluateAgent } from './services/evalService.js';
 import { prisma } from './storage/prisma.js';
@@ -10,37 +11,38 @@ const log = pino({ level: process.env.LOG_LEVEL || 'info' });
 async function init() {
   log.info('Worker starting with adaptive loop + git/diff engine');
 
-  planQueue.process(async job => {
+  const planWorker = new Worker('plan', async (job) => {
     const { owner, repo, issueNumber } = job.data;
     const id = `${owner}_${repo}_${issueNumber}`.toLowerCase();
     log.info({ id }, 'Planning');
     await ensurePlan(id);
-  });
+  }, { connection });
 
-  execQueue.process(async job => {
+  const execWorker = new Worker('exec', async (job) => {
     const { owner, repo, issueNumber } = job.data;
     const id = `${owner}_${repo}_${issueNumber}`.toLowerCase();
     log.info({ id }, 'Execution iteration');
     await runAdaptiveIteration(id);
-  });
+  }, { connection });
 
-  evalQueue.process(async job => {
+  const evalWorker = new Worker('eval', async (job) => {
     const { owner, repo, issueNumber } = job.data;
     const id = `${owner}_${repo}_${issueNumber}`.toLowerCase();
     log.info({ id }, 'Evaluation');
     await evaluateAgent(id);
-  });
+  }, { connection });
 
-  sweepQueue.process(async () => {
+  const sweepWorker = new Worker('sweep', async () => {
     log.info('Sweep start');
     await scheduleActiveAgents();
     log.info('Sweep complete');
-  });
+  }, { connection });
 
   setInterval(async () => {
     const agents = await prisma.issueAgent.findMany({ where: { completed: false } });
     for (const a of agents) {
       if (!a.lastEvalAt || Date.now() - a.lastEvalAt.getTime() > 1000 * 60 * 10) {
+        const evalQueue = (await import('./queue.js')).evalQueue;
         await evalQueue.add(`eval-${a.id}-${Date.now()}`, {
           owner: a.owner,
           repo: a.repo,

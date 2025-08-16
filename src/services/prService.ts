@@ -1,6 +1,16 @@
 import { Octokit } from 'octokit';
+import { getInstallationOctokit } from "../octokit.js";
+import { prisma } from "../storage/prisma.js";
+import { cfg } from "../config.js";
 
 export interface PRServiceOptions { token: string; owner: string; repo: string; }
+
+export interface PROptions {
+  installationId: number;
+  owner: string;
+  repo: string;
+  agentId: string;
+}
 
 export class PRService {
   octo: Octokit;
@@ -25,4 +35,38 @@ export class PRService {
   }
 }
 
-export default { PRService };
+// Missing function required by adaptiveLoop.ts
+export async function ensurePullRequest(options: PROptions): Promise<number> {
+  const agent = await prisma.issueAgent.findUnique({ where: { id: options.agentId } });
+  if (!agent) throw new Error('Agent not found');
+  
+  if (agent.prNumber) {
+    return agent.prNumber;
+  }
+
+  const octo = await getInstallationOctokit(options.installationId.toString());
+  
+  try {
+    const { data: pr } = await octo.rest.pulls.create({
+      owner: options.owner,
+      repo: options.repo,
+      title: `${cfg.git.pullRequestTitlePrefix} ${agent.issueTitle}`,
+      head: agent.branchName,
+      base: cfg.git.defaultBase,
+      body: `Automated implementation of issue #${agent.issueNumber}\n\n- [ ] Implementation in progress\n- [ ] Tests added\n- [ ] Documentation updated`,
+      draft: true
+    });
+
+    await prisma.issueAgent.update({
+      where: { id: agent.id },
+      data: { prNumber: pr.number }
+    });
+
+    return pr.number;
+  } catch (e) {
+    console.error('Failed to create PR:', e);
+    return 0;
+  }
+}
+
+export default { PRService, ensurePullRequest };

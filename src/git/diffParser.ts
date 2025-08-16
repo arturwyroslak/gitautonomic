@@ -1,12 +1,12 @@
 export interface ParsedFileDiff {
-  oldPath?: string;
-  newPath?: string;
-  isNew?: boolean;
-  isDeleted?: boolean;
-  isRename?: boolean;
+  oldPath: string | null;
+  newPath: string | null;
+  isNew: boolean;
+  isDeleted: boolean;
+  isRename: boolean;
   added: number;
   deleted: number;
-  hunks: { header: string; lines: string[] }[];
+  hunks: { header: string; oldStart: number; oldLines: number; newStart: number; newLines: number; lines: string[] }[];
 }
 
 export interface ParsedDiff {
@@ -41,7 +41,17 @@ export function parseUnifiedDiff(diff: string): ParsedDiff {
     else if (renameFrom.test(line)) { current.isRename = true; current.oldPath = renameFrom.exec(line)![1]; }
     else if (renameTo.test(line)) { current.isRename = true; current.newPath = renameTo.exec(line)![1]; }
     else if (hunkHeaderRegex.test(line)) {
-      current.hunks.push({ header: line, lines: [] });
+      const hunkMatch = hunkHeaderRegex.exec(line);
+      if (hunkMatch) {
+        current.hunks.push({ 
+          header: line, 
+          oldStart: parseInt(hunkMatch[1], 10),
+          oldLines: parseInt(hunkMatch[2], 10),
+          newStart: parseInt(hunkMatch[3], 10),
+          newLines: parseInt(hunkMatch[4], 10),
+          lines: [] 
+        });
+      }
     } else if (line.startsWith('+') && !line.startsWith('+++')) {
       current.added++;
       current.hunks.at(-1)?.lines.push(line);

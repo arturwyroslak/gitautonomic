@@ -52,4 +52,18 @@ export class ReasoningEngine {
   }
 }
 
-export default { ReasoningEngine };
+// Missing function required by adaptiveLoop.ts
+export async function reasoningPipeline(input: any): Promise<any> {
+  // TODO: implement proper reasoning pipeline
+  return {
+    summary: `Reasoning completed for ${input.phase}`,
+    trace: {
+      phase: input.phase,
+      steps: [],
+      summary: 'Basic reasoning trace'
+    },
+    confidence: 0.8
+  };
+}
+
+export default { ReasoningEngine, reasoningPipeline };

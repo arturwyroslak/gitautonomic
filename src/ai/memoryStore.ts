@@ -27,4 +27,22 @@ export class MemoryStore {
   }
 }
 
-export default { MemoryStore };
+// Missing functions required by adaptiveLoop.ts
+export async function fetchStrategicBundle(agentId: string): Promise<string[]> {
+  // TODO: implement proper strategic memory fetching from database
+  return ['strategic memory placeholder'];
+}
+
+export async function compressStrategic(agentId: string): Promise<void> {
+  // TODO: implement memory compression logic
+}
+
+export async function decayMemories(agentId: string): Promise<void> {
+  // TODO: implement memory decay logic
+}
+
+export async function addMemory(agentId: string, type: string, content: string, meta?: Record<string, any>): Promise<void> {
+  // TODO: implement memory addition to database
+}
+
+export default { MemoryStore, fetchStrategicBundle, compressStrategic, decayMemories, addMemory };
