@@ -1,9 +1,0 @@
-{
-  "version": "0.1.0",
-  "components": [
-    "AutoOrchestrator",
-    "PluginRegistry",
-    "Strategies",
-    "Bootstrap"
-  ]
-}
