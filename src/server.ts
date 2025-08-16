@@ -1,12 +1,34 @@
 import express from 'express';
+import path from 'path';
+import cookieParser from 'cookie-parser';
 import pino from 'pino';
 import { webhooks } from './webhook.js';
 import { scheduleActiveAgents } from './services/loopScheduler.js';
+import authRoutes from './routes/auth.js';
+import dashboardRoutes from './routes/dashboard.js';
 
 const log = pino({ level: process.env.LOG_LEVEL || 'info' });
 const app = express();
 
 app.use(express.json({ limit:'2mb' }));
+app.use(cookieParser());
+
+// Serve static files from public directory
+app.use('/public', express.static(path.join(process.cwd(), 'public')));
+
+// API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+
+// Serve landing page at root
+app.get('/', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
+});
+
+// Serve dashboard page
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'public', 'dashboard.html'));
+});
 
 app.post('/webhook', (req,res) => {
   webhooks.verifyAndReceive({ 

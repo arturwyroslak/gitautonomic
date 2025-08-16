@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitAutonomic Dashboard</title>
+    <link rel="stylesheet" href="/public/styles.css">
+    <link rel="stylesheet" href="/public/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fab fa-github"></i>
+                    <span>GitAutonomic</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-menu">
+                <a href="#overview" class="menu-item active" data-section="overview">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Overview</span>
+                </a>
+                <a href="#agents" class="menu-item" data-section="agents">
+                    <i class="fas fa-robot"></i>
+                    <span>AI Agents</span>
+                </a>
+                <a href="#repositories" class="menu-item" data-section="repositories">
+                    <i class="fas fa-code-branch"></i>
+                    <span>Repositories</span>
+                </a>
+                <a href="#analytics" class="menu-item" data-section="analytics">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="#security" class="menu-item" data-section="security">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Security</span>
+                </a>
+                <a href="#settings" class="menu-item" data-section="settings">
+                    <i class="fas fa-cogs"></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <img id="userAvatar" src="" alt="User Avatar" class="user-avatar">
+                    <div class="user-details">
+                        <div id="userName" class="user-name"></div>
+                        <div id="userEmail" class="user-email"></div>
+                    </div>
+                </div>
+                <button id="logoutBtn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Overview Section -->
+            <div id="overview" class="content-section active">
+                <div class="section-header">
+                    <h1>Dashboard Overview</h1>
+                    <div class="header-actions">
+                        <button id="refreshBtn" class="btn-icon">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button id="addRepoBtn" class="btn-primary">
+                            <i class="fas fa-plus"></i>
+                            Add Repository
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Key Metrics -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="activeAgents">0</div>
+                            <div class="metric-label">Active Agents</div>
+                            <div class="metric-change positive">+2 this week</div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <i class="fas fa-code-branch"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="totalRepos">0</div>
+                            <div class="metric-label">Repositories</div>
+                            <div class="metric-change positive">+1 this month</div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="successRate">98.5%</div>
+                            <div class="metric-label">Success Rate</div>
+                            <div class="metric-change positive">+0.5%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="tasksCompleted">247</div>
+                            <div class="metric-label">Tasks Completed</div>
+                            <div class="metric-change positive">+23 today</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Activity Feed & Performance Chart -->
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Recent Activity</h3>
+                            <div class="card-actions">
+                                <button class="btn-icon">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="activity-feed" id="activityFeed">
+                            <!-- Activity items will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Performance Trends</h3>
+                            <div class="card-actions">
+                                <select class="period-selector">
+                                    <option value="7d">Last 7 days</option>
+                                    <option value="30d">Last 30 days</option>
+                                    <option value="90d">Last 90 days</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Enhancement Functions Status -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Enhancement Functions Status</h3>
+                        <div class="status-legend">
+                            <span class="status-item">
+                                <span class="status-dot active"></span>
+                                Active
+                            </span>
+                            <span class="status-item">
+                                <span class="status-dot warning"></span>
+                                Warning
+                            </span>
+                            <span class="status-item">
+                                <span class="status-dot error"></span>
+                                Error
+                            </span>
+                        </div>
+                    </div>
+                    <div class="functions-grid" id="functionsGrid">
+                        <!-- Function status cards will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Agents Section -->
+            <div id="agents" class="content-section">
+                <div class="section-header">
+                    <h1>AI Agents Management</h1>
+                    <button class="btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Deploy New Agent
+                    </button>
+                </div>
+                
+                <div class="agents-grid" id="agentsGrid">
+                    <!-- Agent cards will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Repositories Section -->
+            <div id="repositories" class="content-section">
+                <div class="section-header">
+                    <h1>Repository Management</h1>
+                    <button id="connectRepoBtn" class="btn-primary">
+                        <i class="fab fa-github"></i>
+                        Connect Repository
+                    </button>
+                </div>
+                
+                <div class="repositories-list" id="repositoriesList">
+                    <!-- Repository cards will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Analytics Section -->
+            <div id="analytics" class="content-section">
+                <div class="section-header">
+                    <h1>Advanced Analytics</h1>
+                    <div class="analytics-filters">
+                        <select class="filter-select">
+                            <option value="all">All Repositories</option>
+                        </select>
+                        <select class="filter-select">
+                            <option value="30d">Last 30 Days</option>
+                            <option value="90d">Last 90 Days</option>
+                            <option value="1y">Last Year</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="analytics-grid">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Code Quality Trends</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="qualityChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Security Metrics</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="securityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Security Section -->
+            <div id="security" class="content-section">
+                <div class="section-header">
+                    <h1>Security Dashboard</h1>
+                    <div class="security-status">
+                        <span class="status-badge secure">
+                            <i class="fas fa-shield-check"></i>
+                            All Systems Secure
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="security-grid">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Vulnerability Scan Results</h3>
+                        </div>
+                        <div class="vulnerability-list" id="vulnerabilityList">
+                            <!-- Vulnerability items will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Security Compliance</h3>
+                        </div>
+                        <div class="compliance-metrics">
+                            <div class="compliance-item">
+                                <div class="compliance-label">OWASP Top 10</div>
+                                <div class="compliance-score">95%</div>
+                            </div>
+                            <div class="compliance-item">
+                                <div class="compliance-label">CWE Coverage</div>
+                                <div class="compliance-score">87%</div>
+                            </div>
+                            <div class="compliance-item">
+                                <div class="compliance-label">Code Scanning</div>
+                                <div class="compliance-score">100%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Section -->
+            <div id="settings" class="content-section">
+                <div class="section-header">
+                    <h1>Settings</h1>
+                </div>
+                
+                <div class="settings-grid">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Profile Settings</h3>
+                        </div>
+                        <div class="settings-form">
+                            <div class="form-group">
+                                <label for="displayName">Display Name</label>
+                                <input type="text" id="displayName" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="timezone">Timezone</label>
+                                <select id="timezone" class="form-select">
+                                    <option value="UTC">UTC</option>
+                                    <option value="America/New_York">Eastern Time</option>
+                                    <option value="America/Los_Angeles">Pacific Time</option>
+                                </select>
+                            </div>
+                            <button class="btn-primary">Save Changes</button>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Notification Preferences</h3>
+                        </div>
+                        <div class="settings-form">
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <div class="setting-label">Email Notifications</div>
+                                    <div class="setting-description">Receive email updates about agent activities</div>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="emailNotifications" checked>
+                                    <label for="emailNotifications"></label>
+                                </div>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <div class="setting-label">Security Alerts</div>
+                                    <div class="setting-description">Get notified about security issues</div>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="securityAlerts" checked>
+                                    <label for="securityAlerts"></label>
+                                </div>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <div class="setting-label">Performance Reports</div>
+                                    <div class="setting-description">Weekly performance summaries</div>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="performanceReports" checked>
+                                    <label for="performanceReports"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/public/dashboard.js"></script>
+</body>
+</html>

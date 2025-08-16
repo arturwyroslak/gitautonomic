@@ -35,13 +35,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     getStartedBtn?.addEventListener('click', () => {
-        openModal();
-        switchTab('signup');
+        // Direct GitHub OAuth for quick start
+        window.location.href = '/api/auth/github';
     });
     
     ctaBtn?.addEventListener('click', () => {
-        openModal();
-        switchTab('signup');
+        // Direct GitHub OAuth for quick start
+        window.location.href = '/api/auth/github';
     });
     
     // Close modal
@@ -68,6 +68,78 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', () => {
             const tabName = btn.getAttribute('data-tab');
             switchTab(tabName);
+        });
+    });
+
+    // Form submission handlers
+    const loginForm = document.querySelector('#loginForm form');
+    const signupForm = document.querySelector('#signupForm form');
+    const githubBtns = document.querySelectorAll('.btn-github');
+
+    loginForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const email = formData.get('email') || e.target.querySelector('input[type="email"]').value;
+        const password = formData.get('password') || e.target.querySelector('input[type="password"]').value;
+
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                localStorage.setItem('auth_token', data.token);
+                window.location.href = '/dashboard';
+            } else {
+                alert(data.error || 'Login failed');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            alert('Login failed. Please try again.');
+        }
+    });
+
+    signupForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const inputs = e.target.querySelectorAll('input');
+        const username = inputs[0].value; // Full Name
+        const email = inputs[1].value;
+        const password = inputs[2].value;
+
+        try {
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, email, password }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                localStorage.setItem('auth_token', data.token);
+                window.location.href = '/dashboard';
+            } else {
+                alert(data.error || 'Registration failed');
+            }
+        } catch (error) {
+            console.error('Registration error:', error);
+            alert('Registration failed. Please try again.');
+        }
+    });
+
+    // GitHub OAuth buttons
+    githubBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            window.location.href = '/api/auth/github';
         });
     });
     
