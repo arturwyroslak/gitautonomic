@@ -48,7 +48,7 @@ webhooks.on('pull_request.closed', async e => {
   const body = e.payload.pull_request.body || '';
   const match = body.match(/issue #(\d+)/i);
   if (match) {
-    const issueNum = parseInt(match[1],10);
+    const issueNum = parseInt(match?.[1] || '0', 10);
     const octo = await getInstallationOctokit(e.payload.installation!.id);
     await octo.rest.issues.createComment({
       owner: e.payload.repository.owner.login,

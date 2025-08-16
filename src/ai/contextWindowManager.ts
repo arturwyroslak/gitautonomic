@@ -9,7 +9,7 @@ export interface Chunk {
 export class ContextWindowManager {
   maxTokens: number;
   safetyMargin: number;
-  constructor(maxTokens = cfg.model.maxContextTokens ?? 16000, safetyMargin = 0.1) {
+  constructor(maxTokens = 16000, safetyMargin = 0.1) {
     this.maxTokens = maxTokens;
     this.safetyMargin = safetyMargin;
   }
@@ -44,6 +44,20 @@ export class ContextWindowManager {
     const allowed = Math.floor(this.maxTokens * (1 - this.safetyMargin) * 4); // char heuristic
     const bodyAllowed = Math.max(0, allowed - (prefix.length + suffix.length));
     return { text: prefix + body.slice(0, bodyAllowed) + suffix, truncated: true };
+  }
+  
+  // Missing methods required by adaptiveLoop.ts
+  trimFiles(files: { path: string; content: string }[], tasks: any[]): { path: string; content: string }[] {
+    // Simple implementation: trim each file individually
+    return files.map(file => ({
+      path: file.path,
+      content: this.trimToFit('', file.content).text
+    }));
+  }
+  
+  packReasoning(summaries: string[]): string {
+    const combined = summaries.join('\n---\n');
+    return this.trimToFit('', combined).text;
   }
 }
 

@@ -144,7 +144,7 @@ export class OpenAIProvider extends BaseProvider {
         { role: "user", content: user }
       ]
     });
-    const raw = resp.choices[0].message?.content || '';
+    const raw = resp.choices?.[0]?.message?.content || '';
     try {
       const parsed = JSON.parse(raw);
       return parsed;
@@ -166,7 +166,7 @@ export class OpenAIProvider extends BaseProvider {
         { role: "user", content: user }
       ]
     });
-    return resp.choices[0].message?.content || rawPrompt;
+    return resp.choices?.[0]?.message?.content || rawPrompt;
   }
 
   private mockPlan(ctx: ProviderPlanContext) {

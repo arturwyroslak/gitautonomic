@@ -22,4 +22,18 @@ export class PatchLogService {
   }
 }
 
-export default { PatchLogService };
+// Missing function required by adaptiveLoop.ts
+export async function logPatch(params: {
+  issueAgentId: string;
+  iteration: number;
+  tasks: string[];
+  diff: string;
+  validation: any;
+  applied: boolean;
+  commitSha?: string;
+}): Promise<void> {
+  // TODO: implement proper database logging
+  console.log(`Logged patch for agent ${params.issueAgentId}, iteration ${params.iteration}`);
+}
+
+export default { PatchLogService, logPatch };

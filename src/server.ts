@@ -9,7 +9,12 @@ const app = express();
 app.use(express.json({ limit:'2mb' }));
 
 app.post('/webhook', (req,res) => {
-  webhooks.verifyAndReceive({ id: req.headers['x-github-delivery'] as string, name: req.headers['x-github-event'] as string, payload: req.body, signature: req.headers['x-hub-signature-256'] as string })
+  webhooks.verifyAndReceive({ 
+    id: req.headers['x-github-delivery'] as string, 
+    name: req.headers['x-github-event'] as any, 
+    payload: req.body, 
+    signature: req.headers['x-hub-signature-256'] as string 
+  })
     .then(()=> res.status(200).send('OK'))
     .catch(err => { log.error({ err }, 'Webhook verification failed'); res.status(400).send('Bad signature'); });
 });

@@ -1,0 +1,80 @@
+# File and directory ownership policies
+# Defines which parts of the repository the AI agent can modify
+
+ownership_rules:
+  # Core source code - AI can modify
+  - paths:
+      - "src/**"
+    permissions:
+      - read
+      - write
+      - create
+      - delete
+    restrictions:
+      - no_bulk_delete: true
+      - preserve_exports: true
+    
+  # Configuration files - restricted modifications
+  - paths:
+      - "package.json"
+      - "tsconfig.json"
+      - ".aiagent.yml"
+      - ".aiagent-ownership.yml"
+    permissions:
+      - read
+      - write
+    restrictions:
+      - require_approval: true
+      - no_delete: true
+  
+  # Database schema - careful modifications only
+  - paths:
+      - "prisma/schema.prisma"
+    permissions:
+      - read
+      - write
+    restrictions:
+      - require_migration: true
+      - backup_required: true
+  
+  # Tests - AI can create and modify
+  - paths:
+      - "tests/**"
+      - "**/*.test.ts"
+      - "**/*.spec.ts"
+    permissions:
+      - read
+      - write
+      - create
+      - delete
+  
+  # Documentation - AI can modify
+  - paths:
+      - "docs/**"
+      - "*.md"
+      - "README.md"
+    permissions:
+      - read
+      - write
+      - create
+    restrictions:
+      - preserve_structure: true
+
+  # Protected files - read-only
+  - paths:
+      - ".git/**"
+      - "node_modules/**"
+      - ".env*"
+      - "*.key"
+      - "*.pem"
+    permissions:
+      - read
+    restrictions:
+      - no_modify: true
+
+# Global restrictions
+global_restrictions:
+  max_files_per_commit: 20
+  max_lines_changed_per_file: 500
+  require_tests_for_new_features: true
+  preserve_existing_apis: true

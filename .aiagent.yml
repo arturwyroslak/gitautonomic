@@ -1,0 +1,38 @@
+# Configuration for AI Agent
+provider: openai  # openai | github_models | custom
+model: gpt-4o-mini
+endpoint: null
+max_iterations: 8
+max_tasks_per_iteration: 4
+adaptive_batching: true
+
+# Repository policies
+restrict_paths:
+  include:
+    - "src/**"
+    - "tests/**"
+    - "docs/**"
+  exclude:
+    - "src/experimental/**"
+    - "node_modules/**"
+    - ".git/**"
+
+# Quality controls
+test_command: "npm run test"
+build_command: "npm run build"
+lint_command: "npm run lint"
+
+# Security policies
+semgrep_policy: "block_high_severity"
+ownership_enforcement: true
+require_tests: true
+
+# Risk management
+risk_threshold: 0.7
+auto_refinement: true
+backup_on_failure: true
+
+# Evaluation settings
+self_evaluation: true
+coverage_threshold: 0.75
+completion_confidence: 0.9

@@ -13,8 +13,8 @@ export async function evaluateAgent(agentId: string) {
   const provider = await resolveProvider(Number(agent.installationId));
   if (!provider.evaluateAndSuggest) return;
 
-  const completed = agent.tasks.filter(t => t.status === 'done').map(t => t.externalId);
-  const currentTasks = agent.tasks.filter(t => t.status !== 'done').map(t => ({
+  const completed = agent.tasks.filter((t: any) => t.status === 'done').map((t: any) => t.externalId);
+  const currentTasks = agent.tasks.filter((t: any) => t.status !== 'done').map((t: any) => ({
     id: t.externalId,
     title: t.title,
     type: t.type,
@@ -32,16 +32,11 @@ export async function evaluateAgent(agentId: string) {
     planVersion: agent.planVersion
   });
 
-  await addMemory({
-    issueAgentId: agent.id,
-    type: 'evaluation',
-    content: {
-      coverage: evalResult.coverageScore,
-      rationale: evalResult.rationale,
-      newTasks: evalResult.newTasks?.length || 0
-    },
-    salience: 0.55 + (evalResult.coverageScore * 0.2)
-  });
+  await addMemory(agent.id, 'evaluation', JSON.stringify({
+    coverage: evalResult.coverageScore,
+    rationale: evalResult.rationale,
+    newTasks: evalResult.newTasks?.length || 0
+  }));
 
   if (cfg.eval.autoExpand && evalResult.newTasks?.length) {
     let idxBase = agent.tasks.length;

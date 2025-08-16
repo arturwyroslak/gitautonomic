@@ -1,7 +1,7 @@
 import { cfg } from "../config.js";
-import { IssueAgent, Task } from "@prisma/client";
+// import { IssueAgent, Task } from "@prisma/client"; // TODO: Fix after Prisma generation
 
-export function decideBatch(agent: IssueAgent, pending: Task[]): number {
+export function decideBatch(agent: any, pending: any[]): number {
   if (!pending.length) return 0;
   const base = Math.min(pending.length,  cfg.adaptive.maxBatch);
   const successFactor = agent.confidence;
@@ -14,7 +14,7 @@ export function updateConfidence(prev: number, success: boolean): number {
   return Math.max(0, prev - cfg.adaptive.confidenceDecreaseOnFail);
 }
 
-export function terminationReached(agent: IssueAgent): boolean {
+export function terminationReached(agent: any): boolean {
   if (agent.completed) return true;
   if (agent.confidence >= cfg.termination.requiredConfidence && agent.doneTasks > 0 && agent.doneTasks === agent.totalTasks) return true;
   return false;
