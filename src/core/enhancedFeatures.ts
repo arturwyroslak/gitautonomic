@@ -435,6 +435,9 @@ class EnhancedDecisionEngine {
   }
 
   private selectBestAlternative(alternatives: Decision[]): Decision {
+    if (alternatives.length === 0) {
+      return { option: 'default', parameters: {}, confidence: 0.5 };
+    }
     return alternatives.reduce((best, current) => 
       (current.score || 0) > (best.score || 0) ? current : best
     );
