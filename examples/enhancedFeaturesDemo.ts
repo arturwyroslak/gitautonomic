@@ -2,7 +2,7 @@
 // Demonstration script for the 30 new enhanced GitAutonomic functionalities
 
 import pino from 'pino';
-import EnhancedGitAutonomicService from '../services/enhancedGitAutonomicService.js';
+import EnhancedGitAutonomicService from '../src/services/enhancedGitAutonomicService.js';
 
 const log = pino({ level: 'info' });
 

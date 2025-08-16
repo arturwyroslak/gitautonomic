@@ -10,7 +10,7 @@ import {
   EnhancedQualityEngine,
   EnhancedLearningEngine,
   EnhancedDevOpsEngine
-} from '../core/enhancedFeatures.js';
+} from '../src/core/enhancedFeatures.js';
 
 const log = pino({ level: 'info' });
 
