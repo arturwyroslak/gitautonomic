@@ -50,6 +50,52 @@ export class ReasoningEngine {
     }
     return history;
   }
+
+  async decompose(objective: string, options: { limit?: number } = {}): Promise<any[]> {
+    // Decompose complex objective into smaller tasks
+    const limit = options.limit || 10;
+    const prompt = `Decompose this objective into ${limit} smaller, actionable tasks:
+    
+Objective: ${objective}
+
+Return a JSON array of tasks, each with: { id, title, description, dependencies }`;
+
+    const response = await this.model.complete(prompt, { temperature: 0.3 });
+    try {
+      return JSON.parse(response);
+    } catch {
+      return [{ id: '1', title: objective, description: 'Single task', dependencies: [] }];
+    }
+  }
+
+  async analyzeObjective(objective: string, options: any = {}): Promise<any> {
+    // Analyze objective to understand complexity, risks, and approach
+    const prompt = `Analyze this software development objective:
+    
+Objective: ${objective}
+
+Provide analysis with:
+- complexity: low/medium/high
+- estimated_effort: hours
+- risks: array of risk descriptions
+- approach: recommended implementation approach
+- prerequisites: required dependencies or setup
+
+Return as JSON.`;
+
+    const response = await this.model.complete(prompt, { temperature: 0.3 });
+    try {
+      return JSON.parse(response);
+    } catch {
+      return {
+        complexity: 'medium',
+        estimated_effort: 4,
+        risks: ['Unknown complexity'],
+        approach: 'Iterative development',
+        prerequisites: []
+      };
+    }
+  }
 }
 
 // Missing function required by adaptiveLoop.ts

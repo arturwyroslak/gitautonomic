@@ -14,7 +14,7 @@ import { validatePatch } from "./patchValidator.js";
 import { maybeRefinePatch } from "./patchRefiner.js";
 import { logPatch } from "../services/patchLogService.js";
 import { ensurePullRequest } from "../services/prService.js";
-import crypto from 'crypto';
+import { createHash } from 'node:crypto';
 import { getInstallationOctokit } from "../octokit.js";
 
 interface ExecResult {
@@ -220,7 +220,7 @@ export async function ensurePlan(agentId: string) {
     data: {
       totalTasks: tasks.length,
       planVersion: agent.planVersion + 1,
-      planHash: crypto.createHash('sha256').update(planRaw).digest('hex'),
+      planHash: createHash('sha256').update(planRaw).digest('hex'),
       planCommitSha: 'local-generated'
     }
   });

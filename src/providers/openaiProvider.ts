@@ -43,7 +43,7 @@ export class OpenAIProvider extends BaseProvider {
         { role: "user", content: user }
       ]
     });
-    return resp.choices[0].message?.content || this.mockPlan(ctx);
+    return resp.choices?.[0]?.message?.content || this.mockPlan(ctx);
   }
 
   async generatePatch(ctx: ProviderPatchContext) {
@@ -66,7 +66,7 @@ export class OpenAIProvider extends BaseProvider {
         { role: "user", content: user }
       ]
     });
-    const out = resp.choices[0].message?.content || '';
+    const out = resp.choices?.[0]?.message?.content || '';
     if (/NO_CHANGES/i.test(out)) return { diff: '', noChanges: true };
     const trace: ReasoningTrace = {
       phase: 'execution',
@@ -104,7 +104,7 @@ export class OpenAIProvider extends BaseProvider {
       ]
     });
 
-    const raw = resp.choices[0].message?.content?.trim() || '';
+    const raw = resp.choices?.[0]?.message?.content?.trim() || '';
     let parsed: any;
     try {
       parsed = JSON.parse(raw);

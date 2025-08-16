@@ -56,7 +56,7 @@ export class AutoOrchestrator {
     this.engine = engine;
     this.plugins = plugins;
     this.opts = opts;
-    this.refiner = plugins.context().get<PatchRefiner>('patch:refiner') || new PatchRefiner(engine);
+    this.refiner = plugins.context().get<PatchRefiner>('patch:refiner') || new PatchRefiner();
   }
 
   private emit(e: OrchestratorEvent) {
@@ -126,9 +126,7 @@ export class AutoOrchestrator {
       if (result.ok && result.candidatePatch && !this.opts.dryRun) {
         let ref: PatchRefineResult | undefined;
         try {
-          ref = await this.refiner.refine(result.candidatePatch, {
-            maxIters: this.opts.refineIters ?? 2
-          });
+          ref = await this.refiner.refine(result.candidatePatch, []);
           this.emit({
             type: 'patch.refined',
             ok: ref.ok,
