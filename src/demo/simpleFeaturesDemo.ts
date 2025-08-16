@@ -44,11 +44,20 @@ async function demonstrateFeatures() {
     log.info(`     🔍 Found ${dupResult.exactDuplicates.length} exact and ${dupResult.semanticDuplicates.length} semantic duplicates`);
     
     log.info('  ✅ 4. Dynamic Code Behavior Prediction');
-    const behaviorResult = await codeIntelligence.predictCodeBehavior('console.log("test")', {});
+    const behaviorResult = await codeIntelligence.predictCodeBehavior('console.log("test")', {
+      environment: 'node',
+      inputs: [],
+      state: {}
+    });
     log.info(`     🎯 Predicted ${behaviorResult.sideEffects.length} side effects, ${behaviorResult.potentialErrors.length} potential errors`);
     
     log.info('  ✅ 5. Code Evolution and Change Impact Analysis');
-    const impactResult = await codeIntelligence.analyzeChangeImpact('diff content', {});
+    const impactResult = await codeIntelligence.analyzeChangeImpact('diff content', {
+      language: 'typescript',
+      framework: 'node',
+      architecture: 'modular',
+      teamSize: 5
+    });
     log.info(`     📈 Impact radius covers ${impactResult.affectedComponents.length} components`);
     
     log.info('  ✅ 6. Adaptive Code Complexity Management');
@@ -74,7 +83,12 @@ async function demonstrateFeatures() {
     log.info(`     📊 Resource efficiency: ${resourceResult.efficiency}`);
     
     log.info('  ✅ 9. Intelligent Priority Management System');
-    const priorityResult = await decisionEngine.managePriorities([], {});
+    const priorityResult = await decisionEngine.managePriorities([], {
+      language: 'typescript',
+      framework: 'node',
+      architecture: 'modular',
+      teamSize: 5
+    });
     log.info(`     📅 Managed ${priorityResult.prioritizedTasks.length} prioritized tasks`);
     
     log.info('  ✅ 10. Context-Aware Strategy Selection');
@@ -115,7 +129,12 @@ async function demonstrateFeatures() {
     log.info(`     🌍 Translated code with ${translationResult.idiomaticAdaptations.length} adaptations`);
     
     log.info('  ✅ 16. Adaptive Template and Pattern Generation');
-    const templateResult = await codeGeneration.generateAdaptiveTemplates({}, []);
+    const templateResult = await codeGeneration.generateAdaptiveTemplates({
+      language: 'typescript',
+      framework: 'node',
+      architecture: 'modular',
+      teamSize: 5
+    }, []);
     log.info(`     📋 Generated ${templateResult.templates.length} templates`);
     
     log.info('  ✅ 17. Intelligent API Design and Generation');
