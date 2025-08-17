@@ -159,7 +159,7 @@ export class SmartCodeQualityGates {
 
   private calculateDocumentationScore(codeChanges: CodeChanges): number {
     let score = 0;
-    let totalFiles = codeChanges.files.length;
+    const totalFiles = codeChanges.files.length;
     
     codeChanges.files.forEach(file => {
       const hasJSDoc = file.content.includes('/**');
