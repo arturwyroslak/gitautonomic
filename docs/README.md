@@ -20,6 +20,7 @@ This directory contains comprehensive documentation for the GitAutonomic autonom
 - **[Quick Start Guide](quick-start.md)** - Fast setup for development and testing
 - **[Administrator Installation Guide](admin-installation.md)** - Production installation and deployment
 - **[Deployment Guide](deployment-guide.md)** - Cloud and on-premise deployment strategies
+- **[Kompletna Instrukcja Wdrożenia (Polish)](instrukcja-wdrożenia-pl.md)** - Pełna instrukcja wdrożenia po polsku
 - **[Troubleshooting Guide](troubleshooting.md)** - Common issues and solutions
 
 ### Advanced Features
@@ -35,6 +36,7 @@ This directory contains comprehensive documentation for the GitAutonomic autonom
 | [Configuration](configuration.md) | Customization options | Administrators, power users |
 | [Admin Installation](admin-installation.md) | Production setup | System administrators |
 | [Deployment Guide](deployment-guide.md) | Multi-environment deployment | DevOps engineers |
+| [Instrukcja Wdrożenia PL](instrukcja-wdrożenia-pl.md) | Complete Polish deployment guide | Polish administrators |
 | [Advanced Features](advanced-features.md) | Enterprise capabilities | Enterprise users |
 | [API Reference](api-reference.md) | Integration development | Developers |
 | [Troubleshooting](troubleshooting.md) | Problem resolution | All users |

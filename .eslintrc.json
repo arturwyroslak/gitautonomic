@@ -22,5 +22,5 @@
     "no-unused-vars": "off",
     "no-redeclare": "off"
   },
-  "ignorePatterns": ["dist/", "node_modules/", "examples/"]
+  "ignorePatterns": ["dist/", "node_modules/", "examples/", "public/"]
 }

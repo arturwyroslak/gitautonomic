@@ -1,36 +1,154 @@
-version: "3.9"
+volumes:
+  postgres_data:
+  redis_data:
+
 services:
-  api:
-    build: .
-    environment:
-      GITHUB_APP_ID: ${GITHUB_APP_ID}
-      GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY}
-      GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
-      DATABASE_URL: postgres://postgres:postgres@db:5432/agent
-      REDIS_URL: redis://redis:6379
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      LOG_LEVEL: info
-    ports:
-      - "3000:3000"
-    depends_on: [db, redis, worker]
-  worker:
-    build: .
-    command: ["node","dist/worker.js"]
-    environment:
-      GITHUB_APP_ID: ${GITHUB_APP_ID}
-      GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY}
-      GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
-      DATABASE_URL: postgres://postgres:postgres@db:5432/agent
-      REDIS_URL: redis://redis:6379
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      LOG_LEVEL: info
-    depends_on: [db, redis]
   db:
     image: postgres:15
     environment:
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: agent
-    ports: ["5433:5432"]
+      POSTGRES_DB: gitautonomic
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gitautonomic"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   redis:
-    image: redis:7
-    ports: ["6379:6379"]
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  db-setup:
+    build: .
+    command: >
+      sh -c "
+        echo 'Waiting for database to be ready...' &&
+        until pg_isready -h db -p 5432 -U postgres; do
+          echo 'Database not ready, waiting...'
+          sleep 2
+        done &&
+        echo 'Database ready! Running migrations...' &&
+        npm run prisma:gen &&
+        npm run migrate &&
+        echo 'Database setup complete!'
+      "
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/gitautonomic
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build: .
+    environment:
+      # GitHub App Configuration
+      GITHUB_APP_ID: ${GITHUB_APP_ID}
+      GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY}
+      GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
+      
+      # GitHub OAuth Configuration
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+      GITHUB_REDIRECT_URI: ${GITHUB_REDIRECT_URI:-http://localhost:3000/api/auth/github/callback}
+      
+      # JWT Configuration
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-for-jwt-tokens}
+      
+      # Database and Cache
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/gitautonomic
+      REDIS_URL: redis://redis:6379
+      
+      # AI Configuration
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      CUSTOM_LLM_ENDPOINT: ${CUSTOM_LLM_ENDPOINT}
+      CUSTOM_LLM_API_KEY: ${CUSTOM_LLM_API_KEY}
+      EMBEDDINGS_MODEL: ${EMBEDDINGS_MODEL:-text-embedding-3-small}
+      
+      # Agent Configuration
+      RISK_HIGH_THRESHOLD: ${RISK_HIGH_THRESHOLD:-0.7}
+      COVERAGE_MIN_LINES: ${COVERAGE_MIN_LINES:-0.75}
+      AGENT_WORK_ROOT: ${AGENT_WORK_ROOT:-/tmp/ai-agent-work}
+      
+      # Application Configuration
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      PORT: ${PORT:-3000}
+      NODE_ENV: ${NODE_ENV:-production}
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    volumes:
+      - /tmp/ai-agent-work:/tmp/ai-agent-work
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      db-setup:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  worker:
+    build: .
+    command: ["node", "dist/worker.js"]
+    environment:
+      # GitHub App Configuration
+      GITHUB_APP_ID: ${GITHUB_APP_ID}
+      GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY}
+      GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
+      
+      # GitHub OAuth Configuration
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+      
+      # JWT Configuration
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-for-jwt-tokens}
+      
+      # Database and Cache
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/gitautonomic
+      REDIS_URL: redis://redis:6379
+      
+      # AI Configuration
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      CUSTOM_LLM_ENDPOINT: ${CUSTOM_LLM_ENDPOINT}
+      CUSTOM_LLM_API_KEY: ${CUSTOM_LLM_API_KEY}
+      EMBEDDINGS_MODEL: ${EMBEDDINGS_MODEL:-text-embedding-3-small}
+      
+      # Agent Configuration
+      RISK_HIGH_THRESHOLD: ${RISK_HIGH_THRESHOLD:-0.7}
+      COVERAGE_MIN_LINES: ${COVERAGE_MIN_LINES:-0.75}
+      AGENT_WORK_ROOT: ${AGENT_WORK_ROOT:-/tmp/ai-agent-work}
+      
+      # Application Configuration
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      NODE_ENV: ${NODE_ENV:-production}
+    volumes:
+      - /tmp/ai-agent-work:/tmp/ai-agent-work
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      db-setup:
+        condition: service_completed_successfully
+    restart: unless-stopped
