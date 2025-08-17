@@ -3,20 +3,26 @@ import fs from 'fs';
 import path from 'path';
 
 export const cfg = {
+  // GitHub App
   appId: process.env.GITHUB_APP_ID!,
   privateKey: fs.readFileSync(
-    path.resolve(process.env.GITHUB_APP_PRIVATE_KEY || ''),
+    path.resolve(process.env.GITHUB_APP_PRIVATE_KEY!), // ścieżka do pliku montowanego w kontenerze
     'utf8'
   ),
   webhookSecret: process.env.GITHUB_WEBHOOK_SECRET!,
+
+  // Database & Redis
   dbUrl: process.env.DATABASE_URL!,
   redisUrl: process.env.REDIS_URL!,
+
+  // AI / OpenAI
   openaiKey: process.env.OPENAI_API_KEY,
   customEndpoint: process.env.CUSTOM_LLM_ENDPOINT,
   customKey: process.env.CUSTOM_LLM_API_KEY,
   embeddingsModel: process.env.EMBEDDINGS_MODEL || 'text-embedding-3-small',
   defaultModel: 'gpt-4o-mini',
 
+  // Task & Execution limits
   maxPlanTokens: 2200,
   execTokens: 2400,
 
@@ -39,7 +45,7 @@ export const cfg = {
   diff: {
     maxBytes: 64000,
     maxDeletesRatio: 0.45,
-    maxFilePctChangeMinor: 0.35,   // powyżej tego procentu zmian jeśli task ma niskie ryzyko -> dodatkowa walidacja
+    maxFilePctChangeMinor: 0.35,
     largeFileLineThreshold: 800,
     maxTotalFilesPerIter: 24
   },
@@ -53,6 +59,7 @@ export const cfg = {
     minLines: parseFloat(process.env.COVERAGE_MIN_LINES || '0.75'),
     targetLines: 0.82
   },
+
   security: {
     maxHighSeverityIssues: 5,
     semgrepEnabled: true,
