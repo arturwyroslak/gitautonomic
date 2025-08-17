@@ -34,8 +34,10 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # kontener do migracji bazy
   db-setup:
     build: .
+    image: gitautonomic-app
     command: >
       sh -c "
         echo 'Waiting for database to be ready...' &&
@@ -44,8 +46,8 @@ services:
           sleep 2
         done &&
         echo 'Database ready! Running migrations...' &&
-        npm run prisma:gen &&
-        npm run migrate &&
+        npx prisma generate &&
+        npx prisma migrate deploy &&
         echo 'Database setup complete!'
       "
     environment:
@@ -57,6 +59,7 @@ services:
 
   api:
     build: .
+    image: gitautonomic-app
     environment:
       # GitHub App Configuration
       GITHUB_APP_ID: ${GITHUB_APP_ID}
@@ -110,6 +113,7 @@ services:
 
   worker:
     build: .
+    image: gitautonomic-app
     command: ["node", "dist/worker.js"]
     environment:
       # GitHub App Configuration
