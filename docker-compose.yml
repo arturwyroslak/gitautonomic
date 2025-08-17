@@ -1,3 +1,5 @@
+version: "3.9"
+
 volumes:
   postgres_data:
   redis_data:
@@ -34,7 +36,6 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # kontener do migracji bazy
   db-setup:
     build: .
     image: gitautonomic-app
@@ -61,35 +62,22 @@ services:
     build: .
     image: gitautonomic-app
     environment:
-      # GitHub App Configuration
       GITHUB_APP_ID: ${GITHUB_APP_ID}
-      GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY}
+      GITHUB_APP_PRIVATE_KEY: /app/private-key.pem
       GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
-      
-      # GitHub OAuth Configuration
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
       GITHUB_REDIRECT_URI: ${GITHUB_REDIRECT_URI:-http://localhost:3000/api/auth/github/callback}
-      
-      # JWT Configuration
       JWT_SECRET: ${JWT_SECRET:-your-secret-key-for-jwt-tokens}
-      
-      # Database and Cache
       DATABASE_URL: postgresql://postgres:postgres@db:5432/gitautonomic
       REDIS_URL: redis://redis:6379
-      
-      # AI Configuration
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       CUSTOM_LLM_ENDPOINT: ${CUSTOM_LLM_ENDPOINT}
       CUSTOM_LLM_API_KEY: ${CUSTOM_LLM_API_KEY}
       EMBEDDINGS_MODEL: ${EMBEDDINGS_MODEL:-text-embedding-3-small}
-      
-      # Agent Configuration
       RISK_HIGH_THRESHOLD: ${RISK_HIGH_THRESHOLD:-0.7}
       COVERAGE_MIN_LINES: ${COVERAGE_MIN_LINES:-0.75}
       AGENT_WORK_ROOT: ${AGENT_WORK_ROOT:-/tmp/ai-agent-work}
-      
-      # Application Configuration
       LOG_LEVEL: ${LOG_LEVEL:-info}
       PORT: ${PORT:-3000}
       NODE_ENV: ${NODE_ENV:-production}
@@ -97,6 +85,7 @@ services:
       - "${PORT:-3000}:${PORT:-3000}"
     volumes:
       - /tmp/ai-agent-work:/tmp/ai-agent-work
+      - ./private-key.pem:/app/private-key.pem:ro
     depends_on:
       db:
         condition: service_healthy
@@ -116,38 +105,26 @@ services:
     image: gitautonomic-app
     command: ["node", "dist/worker.js"]
     environment:
-      # GitHub App Configuration
       GITHUB_APP_ID: ${GITHUB_APP_ID}
-      GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY}
+      GITHUB_APP_PRIVATE_KEY: /app/private-key.pem
       GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
-      
-      # GitHub OAuth Configuration
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
-      
-      # JWT Configuration
       JWT_SECRET: ${JWT_SECRET:-your-secret-key-for-jwt-tokens}
-      
-      # Database and Cache
       DATABASE_URL: postgresql://postgres:postgres@db:5432/gitautonomic
       REDIS_URL: redis://redis:6379
-      
-      # AI Configuration
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       CUSTOM_LLM_ENDPOINT: ${CUSTOM_LLM_ENDPOINT}
       CUSTOM_LLM_API_KEY: ${CUSTOM_LLM_API_KEY}
       EMBEDDINGS_MODEL: ${EMBEDDINGS_MODEL:-text-embedding-3-small}
-      
-      # Agent Configuration
       RISK_HIGH_THRESHOLD: ${RISK_HIGH_THRESHOLD:-0.7}
       COVERAGE_MIN_LINES: ${COVERAGE_MIN_LINES:-0.75}
       AGENT_WORK_ROOT: ${AGENT_WORK_ROOT:-/tmp/ai-agent-work}
-      
-      # Application Configuration
       LOG_LEVEL: ${LOG_LEVEL:-info}
       NODE_ENV: ${NODE_ENV:-production}
     volumes:
       - /tmp/ai-agent-work:/tmp/ai-agent-work
+      - ./private-key.pem:/app/private-key.pem:ro
     depends_on:
       db:
         condition: service_healthy
