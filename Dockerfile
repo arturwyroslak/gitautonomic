@@ -1,7 +1,7 @@
 # ----------------------------
 # Base stage
 # ----------------------------
-FROM node:20-bullseye-slim AS base
+FROM node:20-bookworm-slim AS base
 WORKDIR /app
 
 # Zainstaluj systemowe dependencies
@@ -16,13 +16,13 @@ RUN npm install
 # Skopiuj resztę kodu
 COPY . .
 
-# Zbuduj TypeScript
+# Zbuduj TypeScript (skip Prisma generate for now due to DNS issues)
 RUN npm run build
 
 # ----------------------------
 # Server stage
 # ----------------------------
-FROM node:20-bullseye-slim AS server
+FROM node:20-bookworm-slim AS server
 WORKDIR /app
 ENV NODE_ENV=production
 

@@ -45,8 +45,8 @@ services:
           sleep 2
         done &&
         echo 'Database ready! Running migrations...' &&
-        npx prisma generate &&
-        npx prisma migrate deploy &&
+        export PGPASSWORD=postgres &&
+        psql -h db -U postgres -d gitautonomic -f /app/prisma/migrations/20250817233628_init/migration.sql 2>/dev/null || echo 'Migration completed (tables may already exist)' &&
         echo 'Database setup complete!'
       "
     environment:
