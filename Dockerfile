@@ -3,14 +3,14 @@
 # ----------------------------
 FROM node:20-bullseye-slim AS base
 WORKDIR /app
-
+ENV NODE_ENV=production
 # Zainstaluj systemowe dependencies
 RUN apt-get update && apt-get install -y wget postgresql-client libssl-dev && rm -rf /var/lib/apt/lists/*
 
 # Skopiuj package.json i zainstaluj wszystkie dependencies
-COPY package.json package-lock.json* pnpm-lock.yaml* ./
+COPY package.json ./
 # production=false ensures devDependencies (prisma) are installed
-RUN npm install --production=false
+RUN npm install --omit=dev
 
 # Skopiuj resztę kodu
 COPY . .
@@ -35,8 +35,6 @@ COPY --from=base /app/dist ./dist
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/prisma ./prisma
 COPY --from=base /app/package.json ./package.json
-COPY --from=base /app/package-lock.json* ./
-COPY --from=base /app/pnpm-lock.yaml* ./
 
 EXPOSE 3000
 
