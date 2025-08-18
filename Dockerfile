@@ -29,9 +29,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3300
 
-# OpenSSL (Prisma) + psql client + netcat do wait-for
+# OpenSSL (Prisma) + psql client + netcat do wait-for + Prisma CLI do migracji
 RUN apt-get update && apt-get install -y --no-install-recommends \
     openssl ca-certificates postgresql-client netcat-openbsd \
+  && npm i -g prisma@5.22.0 \
   && rm -rf /var/lib/apt/lists/*
 
 # Artefakty z buildera
