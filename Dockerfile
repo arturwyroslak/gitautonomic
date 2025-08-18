@@ -49,6 +49,6 @@ ENV PRISMA_CLIENT_ENGINE_TYPE=binary
 # Ensure Prisma client is properly generated
 RUN npx prisma generate --schema=./prisma/schema.prisma || echo "Prisma client generation skipped due to network restrictions"
 
-EXPOSE 3000
+EXPOSE 3300
 
 CMD ["node", "dist/server.js"]
