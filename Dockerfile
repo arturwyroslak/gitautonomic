@@ -1,51 +1,41 @@
 # ----------------------------
-# Base stage
+# Builder stage
 # ----------------------------
-FROM node:20-bookworm-slim AS base
+FROM node:20-bookworm-slim AS builder
 WORKDIR /app
 
-# Zainstaluj systemowe dependencies
-RUN apt-get update && apt-get install -y wget postgresql-client libssl-dev && rm -rf /var/lib/apt/lists/*
-
-# Skopiuj package.json i package-lock.json
+# Lepsze cache warstw
 COPY package.json package-lock.json* ./
+RUN npm ci
 
-# Zainstaluj wszystkie dependencies (w tym devDependencies potrzebne do builda)
-RUN npm install
-
-# Skopiuj resztę kodu
+# Reszta źródeł
 COPY . .
 
-
-# Generate Prisma client with explicit engine types
-RUN npx prisma generate --schema=./prisma/schema.prisma || echo "Prisma generate failed, will try alternative approach"
-
-# Zbuduj TypeScript
+# Prisma client (raz, w buildzie) + build TS
+RUN npx prisma generate --schema=./prisma/schema.prisma
 RUN npm run build
 
+# Usuń devDependencies z node_modules po buildzie
+RUN npm prune --omit=dev
+
 # ----------------------------
-# Server stage
+# Runtime stage (app + worker)
 # ----------------------------
-FROM node:20-bookworm-slim AS server
+FROM node:20-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
+ENV PORT=3300
 
-# Zainstaluj systemowe dependencies potrzebne w runtime
-RUN apt-get update && apt-get install -y wget postgresql-client libssl-dev && rm -rf /var/lib/apt/lists/*
+# Kopiujemy z buildera produkcyjne artefakty
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/package.json ./package.json
 
-# Skopiuj build i node_modules z base
-COPY --from=base /app/dist ./dist
-COPY --from=base /app/node_modules ./node_modules
-COPY --from=base /app/prisma ./prisma
-COPY --from=base /app/package.json ./package.json
+# Nie instalujemy psql/libssl-dev w runtime — lżejszy obraz
+# (Prisma używa własnych binariów, nie wymaga psql)
 
-# Set environment variables for Prisma
-ENV PRISMA_CLI_QUERY_ENGINE_TYPE=binary
-ENV PRISMA_CLIENT_ENGINE_TYPE=binary
+EXPOSE 3000
 
-# Ensure Prisma client is properly generated
-RUN npx prisma generate --schema=./prisma/schema.prisma || echo "Prisma client generation skipped due to network restrictions"
-
-EXPOSE 3300
-
+# Ten sam obraz działa jako app (server.js) i worker (dist/worker.js)
 CMD ["node", "dist/server.js"]
