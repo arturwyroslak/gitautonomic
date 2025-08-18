@@ -1,133 +1,139 @@
-volumes:
-  postgres_data:
-  redis_data:
+version: "3.8"
 
 services:
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: gitautonomic
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "${DB_PORT:-5433}:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d gitautonomic"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  redis:
-    image: redis:7-alpine
-    volumes:
-      - redis_data:/data
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  db-setup:
+  app:
     build: .
-    image: gitautonomic-app
-    command: >
-      sh -c "
-        echo 'Waiting for database to be ready...' &&
-        until pg_isready -h db -p 5432 -U postgres; do
-          echo 'Database not ready, waiting...'
-          sleep 2
-        done &&
-        echo 'Database ready! Running migrations...' &&
-        export PGPASSWORD=postgres &&
-        psql -h db -U postgres -d gitautonomic -f /app/prisma/migrations/20250817233628_init/migration.sql 2>/dev/null || echo 'Migration completed (tables may already exist)' &&
-        echo 'Database setup complete!'
-      "
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/gitautonomic
+    restart: unless-stopped
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
-    restart: "no"
-
-  api:
-    build: .
-    image: gitautonomic-app
+      redis:
+        condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
+    ports:
+      - "3000"
     environment:
+      NODE_ENV: production
+      PORT: ${PORT:-3000}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # App URL/Redirects (ustaw APP_HOST w Dokploy, np. myapp.traefik.me)
+      APP_HOST: ${APP_HOST}
+      GITHUB_REDIRECT_URI: ${GITHUB_REDIRECT_URI:-http://${APP_HOST}/api/auth/github/callback}
+
+      # Baza danych i Redis (wewnętrzne hosty w sieci Compose)
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379
+
+      # GitHub App
       GITHUB_APP_ID: ${GITHUB_APP_ID}
-      GITHUB_APP_PRIVATE_KEY: /app/private-key.pem
+      GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY}
       GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
+
+      # Dashboard (opcjonalnie)
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
-      GITHUB_REDIRECT_URI: ${GITHUB_REDIRECT_URI:-http://localhost:3000/api/auth/github/callback}
-      JWT_SECRET: ${JWT_SECRET:-your-secret-key-for-jwt-tokens}
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/gitautonomic
-      REDIS_URL: redis://redis:6379
+
+      # AI provider
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       CUSTOM_LLM_ENDPOINT: ${CUSTOM_LLM_ENDPOINT}
       CUSTOM_LLM_API_KEY: ${CUSTOM_LLM_API_KEY}
       EMBEDDINGS_MODEL: ${EMBEDDINGS_MODEL:-text-embedding-3-small}
+
+      # Inne
+      JWT_SECRET: ${JWT_SECRET}
       RISK_HIGH_THRESHOLD: ${RISK_HIGH_THRESHOLD:-0.7}
       COVERAGE_MIN_LINES: ${COVERAGE_MIN_LINES:-0.75}
-      AGENT_WORK_ROOT: ${AGENT_WORK_ROOT:-/tmp/ai-agent-work}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      PORT: ${PORT:-3000}
-      NODE_ENV: ${NODE_ENV:-production}
-    ports:
-      - "${PORT:-3000}:${PORT:-3000}"
+      AGENT_WORK_ROOT: /tmp/ai-agent-work
     volumes:
-      - /tmp/ai-agent-work:/tmp/ai-agent-work
-      - ./private-key.pem:/app/private-key.pem:ro
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      db-setup:
-        condition: service_completed_successfully
-    restart: unless-stopped
+      - agent_work:/tmp/ai-agent-work
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3300/healthz"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${PORT:-3000}/healthz || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
 
   worker:
     build: .
-    image: gitautonomic-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
     command: ["node", "dist/worker.js"]
     environment:
+      NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379
       GITHUB_APP_ID: ${GITHUB_APP_ID}
-      GITHUB_APP_PRIVATE_KEY: /app/private-key.pem
+      GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY}
       GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
-      JWT_SECRET: ${JWT_SECRET:-your-secret-key-for-jwt-tokens}
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/gitautonomic
-      REDIS_URL: redis://redis:6379
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       CUSTOM_LLM_ENDPOINT: ${CUSTOM_LLM_ENDPOINT}
       CUSTOM_LLM_API_KEY: ${CUSTOM_LLM_API_KEY}
       EMBEDDINGS_MODEL: ${EMBEDDINGS_MODEL:-text-embedding-3-small}
+      JWT_SECRET: ${JWT_SECRET}
       RISK_HIGH_THRESHOLD: ${RISK_HIGH_THRESHOLD:-0.7}
       COVERAGE_MIN_LINES: ${COVERAGE_MIN_LINES:-0.75}
-      AGENT_WORK_ROOT: ${AGENT_WORK_ROOT:-/tmp/ai-agent-work}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      NODE_ENV: ${NODE_ENV:-production}
+      AGENT_WORK_ROOT: /tmp/ai-agent-work
     volumes:
-      - /tmp/ai-agent-work:/tmp/ai-agent-work
-      - ./private-key.pem:/app/private-key.pem:ro
+      - agent_work:/tmp/ai-agent-work
+
+  db-migrate:
+    build: .
+    restart: "no"
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
-      db-setup:
-        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    command: >
+      sh -c "
+        echo 'Running Prisma migrations...' &&
+        for i in $(seq 1 30); do
+          npx prisma migrate deploy && npx prisma generate && exit 0;
+          echo 'DB not ready yet, retrying in 2s...';
+          sleep 2;
+        done;
+        echo 'Migration failed after retries' >&2; exit 1
+      "
+
+  postgres:
+    image: postgres:16-alpine
     restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gitautonomic}
+      POSTGRES_USER: ${POSTGRES_USER:-gitautonomic}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gitautonomic} -d ${POSTGRES_DB:-gitautonomic}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:
+  agent_work:
