@@ -29,8 +29,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3300
 
-# OpenSSL w runtime (dla Prisma engines)
-RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+# OpenSSL (Prisma) + psql client + netcat do wait-for
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssl ca-certificates postgresql-client netcat-openbsd \
+  && rm -rf /var/lib/apt/lists/*
 
 # Artefakty z buildera
 COPY --from=builder /app/dist ./dist
@@ -40,5 +42,13 @@ COPY --from=builder /app/package.json ./package.json
 # Statyczne pliki frontu
 COPY --from=builder /app/public ./public
 
+# Skrypty inicjalizacji DB
+COPY scripts/db-init.sql ./scripts/db-init.sql
+COPY scripts/entrypoint.sh ./scripts/entrypoint.sh
+RUN chmod +x ./scripts/entrypoint.sh
+
 EXPOSE 3300
+
+# Używamy entrypointa, który wykona SQL, a potem odpali appkę
+ENTRYPOINT ["/app/scripts/entrypoint.sh"]
 CMD ["node", "dist/server.js"]
