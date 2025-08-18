@@ -35,7 +35,7 @@ export class EnhancedPlanningService {
 
     // Analyze repository state and conflicts
     const conflicts = await this.detectConflicts(agentId);
-    const repoState = await this.analyzeRepositoryState(agent.installationId, agent.owner, agent.repo);
+    const repoState = await this.analyzeRepositoryState(agent.installationId.toString(), agent.owner, agent.repo);
     
     // Generate adaptive plan based on current state
     const plan = await this.generateAdaptivePlan({
@@ -272,7 +272,7 @@ export class EnhancedPlanningService {
     if (!agent) return [];
 
     // Load ownership rules from .aiagent-ownership.yml
-    const ownershipRules = await this.loadOwnershipRules(agent.installationId, agent.owner, agent.repo);
+    const ownershipRules = await this.loadOwnershipRules(agent.installationId.toString(), agent.owner, agent.repo);
     return this.extractRequiredApprovers(ownershipRules, agent);
   }
 
@@ -410,9 +410,9 @@ export class EnhancedPlanningService {
         id: `${agentId}-v${version}-${Date.now()}`,
         agentId,
         version,
-        updateType: updates.type || 'manual',
         changes: JSON.stringify(updates),
-        timestamp: new Date()
+        reason: updates.reason,
+        createdAt: new Date()
       }
     });
   }

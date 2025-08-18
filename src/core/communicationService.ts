@@ -111,10 +111,10 @@ export class GitHubChecksService {
     const agent = await prisma.issueAgent.findUnique({ where: { id: agentId } });
     if (!agent) throw new Error('Agent not found');
 
-    const headSha = agent.branchCommitSha || 'main';
+    const headSha = agent.planCommitSha || 'main';
     
     const [planCheck, execCheck, evalCheck, securityCheck, performanceCheck] = await Promise.all([
-      this.createCheckRun(agent.installationId, agent.owner, agent.repo, {
+      this.createCheckRun(agent.installationId.toString(), agent.owner, agent.repo, {
         name: 'ai-plan',
         head_sha: headSha,
         status: 'queued',
@@ -123,7 +123,7 @@ export class GitHubChecksService {
           summary: 'Generating execution plan for issue resolution'
         }
       }),
-      this.createCheckRun(agent.installationId, agent.owner, agent.repo, {
+      this.createCheckRun(agent.installationId.toString(), agent.owner, agent.repo, {
         name: 'ai-exec',
         head_sha: headSha,
         status: 'queued',
@@ -132,7 +132,7 @@ export class GitHubChecksService {
           summary: 'Executing planned tasks'
         }
       }),
-      this.createCheckRun(agent.installationId, agent.owner, agent.repo, {
+      this.createCheckRun(agent.installationId.toString(), agent.owner, agent.repo, {
         name: 'ai-eval',
         head_sha: headSha,
         status: 'queued',
@@ -141,7 +141,7 @@ export class GitHubChecksService {
           summary: 'Evaluating implementation completeness'
         }
       }),
-      this.createCheckRun(agent.installationId, agent.owner, agent.repo, {
+      this.createCheckRun(agent.installationId.toString(), agent.owner, agent.repo, {
         name: 'ai-security',
         head_sha: headSha,
         status: 'queued',
@@ -150,7 +150,7 @@ export class GitHubChecksService {
           summary: 'Running security analysis on changes'
         }
       }),
-      this.createCheckRun(agent.installationId, agent.owner, agent.repo, {
+      this.createCheckRun(agent.installationId.toString(), agent.owner, agent.repo, {
         name: 'ai-performance',
         head_sha: headSha,
         status: 'queued',
@@ -209,7 +209,7 @@ export class GitHubChecksService {
       });
     }
 
-    await this.updateCheckRun(agent.installationId, agent.owner, agent.repo, checkRuns.planCheckId, {
+    await this.updateCheckRun(agent.installationId.toString(), agent.owner, agent.repo, checkRuns.planCheckId, {
       status,
       conclusion: status === 'completed' ? conclusion : undefined,
       output: {
@@ -248,7 +248,7 @@ export class GitHubChecksService {
                       highFindings.length > cfg.security.maxHighSeverityIssues ? 'action_required' : 
                       'success';
 
-    await this.updateCheckRun(agent.installationId, agent.owner, agent.repo, checkRuns.securityCheckId, {
+    await this.updateCheckRun(agent.installationId.toString(), agent.owner, agent.repo, checkRuns.securityCheckId, {
       status: 'completed',
       conclusion,
       output: {
@@ -486,7 +486,7 @@ export class DashboardService {
 
   private async calculateSuccessRate(): Promise<number> {
     const completed = await prisma.issueAgent.count({ where: { completed: true } });
-    const failed = await prisma.issueAgent.count({ where: { failed: true } });
+    const failed = await prisma.issueAgent.count({ where: { blocked: true, completed: false } });
     const total = completed + failed;
     
     return total > 0 ? completed / total : 0;
