@@ -115,6 +115,7 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
+      DB_SUPERPASS: admin_secret
       DATABASE_URL: postgresql://gitautonomic:12345678@postgres:5432/postgres
     command: >
       sh -c "
