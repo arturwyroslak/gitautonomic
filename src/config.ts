@@ -3,7 +3,6 @@ import 'dotenv/config';
 export const cfg = {
   // GitHub App
   appId: process.env.GITHUB_APP_ID!,
-  privateKey: (process.env.GITHUB_APP_PRIVATE_KEY || '').replace(/\\n/g, '\\n'),
   webhookSecret: process.env.GITHUB_WEBHOOK_SECRET!,
 
   // Database & Redis
