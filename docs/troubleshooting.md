@@ -171,6 +171,201 @@ sudo systemctl restart redis-server
 REDIS_URL=redis://:your_password@localhost:6379
 ```
 
+**BullMQ Configuration Issues:**
+
+**Symptoms:**
+- "BullMQ: Your redis options maxRetriesPerRequest must be null" error
+- Worker startup failures
+- Queue jobs not processing
+
+**Root Cause:**
+BullMQ requires specific Redis connection options to function properly. The `maxRetriesPerRequest` option must be set to `null` to prevent ioredis from retrying failed requests indefinitely, which can cause issues with BullMQ's internal mechanisms.
+
+**Solution:**
+Update your Redis connection configuration in `src/queue.ts`:
+
+```typescript
+// Correct BullMQ-compatible configuration
+const connection = new Redis(cfg.redisUrl, {
+  maxRetriesPerRequest: null, // Required for BullMQ
+  enableOfflineQueue: false   // Recommended to avoid command buffering when Redis is down
+});
+```
+
+**Verification:**
+```bash
+# Test worker startup
+npm run dev:worker
+
+# Or build and start worker
+npm run build && npm run start:worker
+
+# Check logs for successful startup without BullMQ errors
+```
+
+### 4. Prisma Migration Issues
+
+**Symptoms:**
+- "relation 'table_name' already exists" errors
+- "constraint 'constraint_name' already exists" errors  
+- Migration failures during deployment
+- Inconsistent database state between environments
+
+**Common Root Causes:**
+- Double application of migrations
+- Mixing `prisma db push` with `prisma migrate` commands
+- Non-idempotent initialization scripts
+- Manual database changes not reflected in migrations
+- Incomplete migration rollbacks
+
+**Diagnosis:**
+```bash
+# Check migration status
+npx prisma migrate status
+
+# View applied migrations in database
+sudo -u postgres psql gitautonomic -c "SELECT * FROM _prisma_migrations ORDER BY applied_at;"
+
+# Compare schema with database
+npx prisma db pull
+git diff prisma/schema.prisma
+
+# Check for duplicate constraints/indexes
+sudo -u postgres psql gitautonomic -c "
+SELECT indexname, tablename 
+FROM pg_indexes 
+WHERE schemaname = 'public' 
+GROUP BY indexname, tablename 
+HAVING COUNT(*) > 1;
+"
+```
+
+**Production Migration Flow (Recommended):**
+```bash
+# 1. Generate migration on development
+npx prisma migrate dev --name your_migration_name
+
+# 2. Commit migration files to version control
+git add prisma/migrations/
+git commit -m "Add migration: your_migration_name"
+
+# 3. Deploy to production (DO NOT use migrate dev in production)
+npx prisma migrate deploy
+
+# 4. Generate client if needed
+npx prisma generate
+```
+
+**Development Migration Flow:**
+```bash
+# For local development changes
+npx prisma db push  # Quick prototyping only
+
+# When ready to create proper migration
+npx prisma migrate dev --name describe_your_changes
+```
+
+**Recovery from "Already Exists" Errors:**
+
+**Non-Destructive Recovery (Recommended):**
+```bash
+# Mark problematic migration as applied without running it
+npx prisma migrate resolve --applied 20231201_migration_name
+
+# Verify migration status
+npx prisma migrate status
+
+# Continue with pending migrations
+npx prisma migrate deploy
+```
+
+**Manual Resolution for Duplicate Relations:**
+```sql
+-- Check what already exists
+\d+ table_name
+
+-- If table exists but migration failed, mark as resolved
+-- Do NOT drop existing tables unless you're certain
+```
+
+**Prevention with Idempotent SQL Patterns:**
+
+For initialization scripts and manual migrations, use idempotent patterns:
+
+```sql
+-- Idempotent table creation
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL
+);
+
+-- Idempotent index creation  
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_email ON users(email);
+
+-- Idempotent constraint addition
+DO $$ 
+BEGIN
+  BEGIN
+    ALTER TABLE users ADD CONSTRAINT users_email_check CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
+  EXCEPTION 
+    WHEN duplicate_object THEN
+      -- Constraint already exists, continue
+      NULL;
+  END;
+END $$;
+
+-- Idempotent column addition
+DO $$ 
+BEGIN
+  BEGIN
+    ALTER TABLE users ADD COLUMN created_at TIMESTAMP DEFAULT NOW();
+  EXCEPTION 
+    WHEN duplicate_column THEN
+      -- Column already exists, continue  
+      NULL;
+  END;
+END $$;
+
+-- Idempotent function creation
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+**Emergency Database Reset (⚠️ DATA LOSS):**
+```bash
+# Only use this for development environments!
+# This will destroy all data!
+
+# Stop application
+sudo systemctl stop gitautonomic
+
+# Reset database completely
+sudo -u postgres psql -c "DROP DATABASE IF EXISTS gitautonomic;"
+sudo -u postgres psql -c "CREATE DATABASE gitautonomic;"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE gitautonomic TO gitautonomic_user;"
+
+# Apply all migrations from scratch
+npx prisma migrate deploy
+
+# Restart application
+sudo systemctl start gitautonomic
+```
+
+**Migration Best Practices:**
+- Always test migrations on a copy of production data first
+- Use `npx prisma migrate dev` only in development
+- Use `npx prisma migrate deploy` in production
+- Never edit applied migration files
+- Use `prisma migrate resolve` for recovery, not manual SQL fixes
+- Keep initialization scripts idempotent
+- Back up database before major migrations
+- Use transactions for complex migrations when possible
+
 ## GitHub Integration Issues
 
 ### 1. Webhook Delivery Failures
