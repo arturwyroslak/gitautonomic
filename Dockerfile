@@ -10,11 +10,10 @@ RUN npm ci
 
 # Reszta źródeł
 COPY . .
-RUN apt-get update -y && apt-get install -y openssl
+RUN apt-get update -y && apt-get install -y libssl-dev
 # Prisma client (raz, w buildzie) + build TS
 RUN npx prisma generate --schema=./prisma/schema.prisma
 RUN npm run build
-RUN apt-get update -y && apt-get install -y openssl
 
 # Usuń devDependencies z node_modules po buildzie
 RUN npm prune --omit=dev
