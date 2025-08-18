@@ -4,38 +4,45 @@
 FROM node:20-bookworm-slim AS builder
 WORKDIR /app
 
-# Lepsze cache warstw
+# OpenSSL do detekcji przez Prisma + certy
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+
+# Lepsze cache
 COPY package.json package-lock.json* ./
 RUN npm ci
 
 # Reszta źródeł
 COPY . .
-RUN apt-get update -y && apt-get install -y libssl-dev
-# Prisma client (raz, w buildzie) + build TS
+
+# Prisma client + build TS
+# (jeśli używasz Node-API domyślnie, to i tak wymaga libssl3 w runtime)
 RUN npx prisma generate --schema=./prisma/schema.prisma
 RUN npm run build
 
-# Usuń devDependencies z node_modules po buildzie
+# Usuń devDependencies
 RUN npm prune --omit=dev
 
 # ----------------------------
-# Runtime stage (app + worker)
+# Runtime stage
 # ----------------------------
 FROM node:20-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3300
 
-# Kopiujemy z buildera produkcyjne artefakty
+# OpenSSL w runtime (dla Prisma engines)
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+
+# Artefakty
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./package.json
 
-# Nie instalujemy psql/libssl-dev w runtime — lżejszy obraz
-# (Prisma używa własnych binariów, nie wymaga psql)
+# Nie wymuszajmy binarnych silników — zostaw domyślne Node-API
+# Jeśli wcześniej miałeś te ENV, usuń:
+# ENV PRISMA_CLI_QUERY_ENGINE_TYPE=binary
+# ENV PRISMA_CLIENT_ENGINE_TYPE=binary
 
 EXPOSE 3300
-
-# Ten sam obraz działa jako app (server.js) i worker (dist/worker.js)
 CMD ["node", "dist/server.js"]
