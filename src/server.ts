@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import cookieParser from 'cookie-parser';
 import pino from 'pino';
+import { createNodeMiddleware } from '@octokit/webhooks';
 import { webhooks } from './webhook.js';
 import { scheduleActiveAgents } from './services/loopScheduler.js';
 import authRoutes from './routes/auth.js';
@@ -9,7 +10,7 @@ import dashboardRoutes from './routes/dashboard.js';
 
 const log = pino({ level: process.env.LOG_LEVEL || 'info' });
 const app = express();
-
+app.use(createNodeMiddleware(webhooks, { path: '/webhook' }));
 // Uwaga: globalny JSON parser OK, ale dla /webhook damy raw body parser per-route
 app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser());
