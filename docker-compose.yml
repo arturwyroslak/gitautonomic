@@ -46,7 +46,7 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
       APP_HOST: ${APP_HOST}
       GITHUB_REDIRECT_URI: ${GITHUB_REDIRECT_URI:-http://${APP_HOST}/api/auth/github/callback}
-      DATABASE_URL: postgresql://gitautonomic:123456@postgres:5432/postgres
+      DATABASE_URL: postgresql://gitautonomic:12345678@postgres:5432/postgres
       REDIS_URL: redis://redis:6379
       GITHUB_APP_ID: ${GITHUB_APP_ID}
       GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
@@ -83,7 +83,7 @@ services:
     environment:
       NODE_ENV: production
       LOG_LEVEL: ${LOG_LEVEL:-info}
-      DATABASE_URL: postgresql://gitautonomic:123456@postgres:5432/postgres
+      DATABASE_URL: postgresql://gitautonomic:12345678@postgres:5432/postgres
       REDIS_URL: redis://redis:6379
       # Reuse tego samego PEM
       GITHUB_APP_PRIVATE_KEY: *gh_app_key
@@ -110,7 +110,7 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://gitautonomic:123456@postgres:5432/postgres
+      DATABASE_URL: postgresql://gitautonomic:12345678@postgres:5432/postgres
     command: >
       sh -c "
         echo 'Running Prisma migrations...' &&
@@ -128,7 +128,7 @@ services:
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: gitautonomic
-      POSTGRES_PASSWORD: 123456
+      POSTGRES_PASSWORD: 12345678
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
