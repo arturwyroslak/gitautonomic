@@ -84,6 +84,7 @@ services:
         condition: service_healthy
       db-migrate:
         condition: service_completed_successfully
+    entrypoint: []   # ważne: omijamy entrypoint (nie uruchamiamy SQL init)
     command: ["node", "dist/worker.js"]
     environment:
       NODE_ENV: production
@@ -115,13 +116,18 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
+      # Parametry do init SQL (superuser) – entrypoint wykona db-init.sql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_SUPERUSER: postgres
       DB_SUPERPASS: admin_secret
       DATABASE_URL: postgresql://gitautonomic:12345678@postgres:5432/postgres
+    # Uwaga: pozostawiamy entrypoint z obrazu (wykona SQL init), a jako command uruchamiamy migracje.
     command: >
-      sh -c "
+      sh -lc "
         echo 'Running Prisma migrations...' &&
         for i in $(seq 1 30); do
-          npx prisma migrate deploy && npx prisma generate && exit 0;
+          prisma migrate deploy && prisma generate && exit 0;
           echo 'DB not ready yet, retrying in 2s...';
           sleep 2;
         done;
