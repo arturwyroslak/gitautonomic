@@ -14,7 +14,8 @@ services:
     ports:
       - "3000"
     environment:
-      GITHUB_APP_PRIVATE_KEY: |
+      # Ten sam klucz zostanie użyty w worker dzięki anchor *gh_app_key
+      GITHUB_APP_PRIVATE_KEY: &gh_app_key |
         -----BEGIN RSA PRIVATE KEY-----
         MIIEpAIBAAKCAQEAyKfQe0X/WCU4a4K5N4J7e3fZFd6wA8HO/qCw7GLjlScsM7Ci
         gzrt0Qp1YVnm5iOgbI2PLQ0CP8GR1RsYol+kTf41MM3TN2gaugyX7b1u3U9AfVzH
@@ -45,31 +46,18 @@ services:
       NODE_ENV: production
       PORT: ${PORT:-3000}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-
-      # Public host (np. domena w Dokploy/ingress)
       APP_HOST: ${APP_HOST}
       GITHUB_REDIRECT_URI: ${GITHUB_REDIRECT_URI:-http://${APP_HOST}/api/auth/github/callback}
-
-      # DB / Redis (wewn. sieć)
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       REDIS_URL: redis://redis:6379
-
-      # GitHub App
       GITHUB_APP_ID: ${GITHUB_APP_ID}
-      
       GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
-
-      # Dashboard OAuth (opcjonalnie)
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
-
-      # AI
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       CUSTOM_LLM_ENDPOINT: ${CUSTOM_LLM_ENDPOINT}
       CUSTOM_LLM_API_KEY: ${CUSTOM_LLM_API_KEY}
       EMBEDDINGS_MODEL: ${EMBEDDINGS_MODEL:-text-embedding-3-small}
-
-      # Inne
       JWT_SECRET: ${JWT_SECRET}
       RISK_HIGH_THRESHOLD: ${RISK_HIGH_THRESHOLD:-0.7}
       COVERAGE_MIN_LINES: ${COVERAGE_MIN_LINES:-0.75}
@@ -77,7 +65,8 @@ services:
     volumes:
       - agent_work:/tmp/ai-agent-work
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${PORT:-3000}/healthz || exit 1"]
+      # Bez wget/curl – używamy Node fetch
+      test: ["CMD", "node", "-e", "fetch('http://localhost:'+(process.env.PORT||3000)+'/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -98,21 +87,16 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       REDIS_URL: redis://redis:6379
-
-      # GitHub App / OAuth (jeśli worker wymaga)
+      # Reuse tego samego PEM
+      GITHUB_APP_PRIVATE_KEY: *gh_app_key
       GITHUB_APP_ID: ${GITHUB_APP_ID}
-      GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY}
       GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
-
-      # AI
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       CUSTOM_LLM_ENDPOINT: ${CUSTOM_LLM_ENDPOINT}
       CUSTOM_LLM_API_KEY: ${CUSTOM_LLM_API_KEY}
       EMBEDDINGS_MODEL: ${EMBEDDINGS_MODEL:-text-embedding-3-small}
-
-      # Inne
       JWT_SECRET: ${JWT_SECRET}
       RISK_HIGH_THRESHOLD: ${RISK_HIGH_THRESHOLD:-0.7}
       COVERAGE_MIN_LINES: ${COVERAGE_MIN_LINES:-0.75}
