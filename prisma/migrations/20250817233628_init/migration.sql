@@ -178,10 +178,10 @@ CREATE INDEX "Iteration_issueAgentId_number_idx" ON "Iteration"("issueAgentId", 
 CREATE INDEX "IssueEmbedding_issueAgentId_scope_idx" ON "IssueEmbedding"("issueAgentId", "scope");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "FileEmbedding_installationId_owner_repo_path_key" ON "FileEmbedding"("installationId", "owner", "repo", "path");
+CREATE INDEX "FileEmbedding_installationId_owner_repo_idx" ON "FileEmbedding"("installationId", "owner", "repo");
 
 -- CreateIndex
-CREATE INDEX "FileEmbedding_installationId_owner_repo_idx" ON "FileEmbedding"("installationId", "owner", "repo");
+CREATE UNIQUE INDEX "FileEmbedding_installationId_owner_repo_path_key" ON "FileEmbedding"("installationId", "owner", "repo", "path");
 
 -- CreateIndex
 CREATE INDEX "AgentMemory_issueAgentId_type_idx" ON "AgentMemory"("issueAgentId", "type");
@@ -215,3 +215,4 @@ ALTER TABLE "ReasoningTrace" ADD CONSTRAINT "ReasoningTrace_issueAgentId_fkey" F
 
 -- AddForeignKey
 ALTER TABLE "PatchLog" ADD CONSTRAINT "PatchLog_issueAgentId_fkey" FOREIGN KEY ("issueAgentId") REFERENCES "IssueAgent"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+

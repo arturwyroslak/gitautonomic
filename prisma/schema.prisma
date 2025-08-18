@@ -1,5 +1,11 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
 model InstallationConfig {
   id              String   @id
@@ -10,7 +16,7 @@ model InstallationConfig {
   apiKeyHash      String?
   maxTasksPerIter Int      @default(4)
   maxTotalIter    Int      @default(50)
-  adaptiveness    Json     @default(json('{"enabled":true}'))
+  adaptiveness    Json     @default("{\"enabled\":true}")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
