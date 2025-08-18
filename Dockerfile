@@ -4,18 +4,17 @@
 FROM node:20-bookworm-slim AS builder
 WORKDIR /app
 
-# OpenSSL do detekcji przez Prisma + certy
+# OpenSSL dla Prisma
 RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Lepsze cache
 COPY package.json package-lock.json* ./
 RUN npm ci
 
-# Reszta źródeł
+# Reszta źródeł (w tym public/)
 COPY . .
 
-# Prisma client + build TS
-# (jeśli używasz Node-API domyślnie, to i tak wymaga libssl3 w runtime)
+# Prisma client + build
 RUN npx prisma generate --schema=./prisma/schema.prisma
 RUN npm run build
 
@@ -33,16 +32,13 @@ ENV PORT=3300
 # OpenSSL w runtime (dla Prisma engines)
 RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
-# Artefakty
+# Artefakty z buildera
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./package.json
-
-# Nie wymuszajmy binarnych silników — zostaw domyślne Node-API
-# Jeśli wcześniej miałeś te ENV, usuń:
-# ENV PRISMA_CLI_QUERY_ENGINE_TYPE=binary
-# ENV PRISMA_CLIENT_ENGINE_TYPE=binary
+# Statyczne pliki frontu
+COPY --from=builder /app/public ./public
 
 EXPOSE 3300
 CMD ["node", "dist/server.js"]
