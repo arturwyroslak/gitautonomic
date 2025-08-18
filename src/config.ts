@@ -1,9 +1,26 @@
 import 'dotenv/config';
+import fs from 'node:fs';
+
+function resolveGithubPrivateKey(): string {
+  // 1) Jeśli podano ścieżkę do pliku z kluczem
+  const pathFromEnv = (process.env.GITHUB_APP_PRIVATE_KEY_PATH || '').trim();
+  if (pathFromEnv && fs.existsSync(pathFromEnv)) {
+    return fs.readFileSync(pathFromEnv, 'utf8');
+  }
+
+  // 2) Surowy PEM z env (wielolinijkowy lub z escapowanymi \n)
+  let raw = (process.env.GITHUB_APP_PRIVATE_KEY || '').trim();
+  if (raw.includes('\\n')) {
+    raw = raw.replace(/\\n/g, '\n');
+  }
+  return raw;
+}
 
 export const cfg = {
   // GitHub App
   appId: process.env.GITHUB_APP_ID!,
   webhookSecret: process.env.GITHUB_WEBHOOK_SECRET!,
+  privateKey: resolveGithubPrivateKey(),
 
   // Database & Redis
   dbUrl: process.env.DATABASE_URL!,
