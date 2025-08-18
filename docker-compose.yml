@@ -139,6 +139,7 @@ services:
     environment:
       POSTGRES_PASSWORD: admin_secret   # hasło superusera "postgres"
       POSTGRES_DB: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"
     volumes:
