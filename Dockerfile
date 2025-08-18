@@ -10,7 +10,7 @@ RUN npm ci
 
 # Reszta źródeł
 COPY . .
-
+RUN apt-get update -y && apt-get install -y openssl
 # Prisma client (raz, w buildzie) + build TS
 RUN npx prisma generate --schema=./prisma/schema.prisma
 RUN npm run build
