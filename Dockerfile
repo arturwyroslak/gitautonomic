@@ -16,9 +16,6 @@ RUN npm install
 # Skopiuj resztę kodu
 COPY . .
 
-# Set environment variables for Prisma generation
-ENV PRISMA_CLI_QUERY_ENGINE_TYPE=binary
-ENV PRISMA_CLIENT_ENGINE_TYPE=binary
 
 # Generate Prisma client with explicit engine types
 RUN npx prisma generate --schema=./prisma/schema.prisma || echo "Prisma generate failed, will try alternative approach"
