@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  app:
+  api:
     build: .
     restart: unless-stopped
     depends_on:
@@ -17,11 +17,12 @@ services:
       NODE_ENV: production
       PORT: ${PORT:-3000}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-      # App URL/Redirects (ustaw APP_HOST w Dokploy, np. myapp.traefik.me)
+
+      # Public host (np. domena w Dokploy/ingress)
       APP_HOST: ${APP_HOST}
       GITHUB_REDIRECT_URI: ${GITHUB_REDIRECT_URI:-http://${APP_HOST}/api/auth/github/callback}
 
-      # Baza danych i Redis (wewnętrzne hosty w sieci Compose)
+      # DB / Redis (wewn. sieć)
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       REDIS_URL: redis://redis:6379
 
@@ -30,11 +31,11 @@ services:
       GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY}
       GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
 
-      # Dashboard (opcjonalnie)
+      # Dashboard OAuth (opcjonalnie)
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
 
-      # AI provider
+      # AI
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       CUSTOM_LLM_ENDPOINT: ${CUSTOM_LLM_ENDPOINT}
       CUSTOM_LLM_API_KEY: ${CUSTOM_LLM_API_KEY}
@@ -69,15 +70,21 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       REDIS_URL: redis://redis:6379
+
+      # GitHub App / OAuth (jeśli worker wymaga)
       GITHUB_APP_ID: ${GITHUB_APP_ID}
       GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY}
       GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+
+      # AI
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       CUSTOM_LLM_ENDPOINT: ${CUSTOM_LLM_ENDPOINT}
       CUSTOM_LLM_API_KEY: ${CUSTOM_LLM_API_KEY}
       EMBEDDINGS_MODEL: ${EMBEDDINGS_MODEL:-text-embedding-3-small}
+
+      # Inne
       JWT_SECRET: ${JWT_SECRET}
       RISK_HIGH_THRESHOLD: ${RISK_HIGH_THRESHOLD:-0.7}
       COVERAGE_MIN_LINES: ${COVERAGE_MIN_LINES:-0.75}
