@@ -47,6 +47,11 @@ services:
       APP_HOST: ${APP_HOST}
       GITHUB_REDIRECT_URI: ${GITHUB_REDIRECT_URI:-http://${APP_HOST}/api/auth/github/callback}
       DATABASE_URL: postgresql://gitautonomic:12345678@postgres:5432/postgres
+      # Parametry do init SQL (superuser)
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_SUPERUSER: postgres
+      DB_SUPERPASS: admin_secret
       REDIS_URL: redis://redis:6379
       GITHUB_APP_ID: ${GITHUB_APP_ID}
       GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
@@ -124,19 +129,18 @@ services:
 
   postgres:
     image: postgres:15
-    restart: unless-stopped
     environment:
+      POSTGRES_PASSWORD: admin_secret   # hasło superusera "postgres"
       POSTGRES_DB: postgres
-      POSTGRES_USER: gitautonomic
-      POSTGRES_PASSWORD: 12345678
-      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U gitautonomic -d postgres"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ${POSTGRES_DB:-postgres} || exit 1"]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 20
 
   redis:
     image: redis:7-alpine
