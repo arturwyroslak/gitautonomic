@@ -35,7 +35,7 @@ COPY --from=builder /app/package.json ./package.json
 # Nie instalujemy psql/libssl-dev w runtime — lżejszy obraz
 # (Prisma używa własnych binariów, nie wymaga psql)
 
-EXPOSE 3000
+EXPOSE 3300
 
 # Ten sam obraz działa jako app (server.js) i worker (dist/worker.js)
 CMD ["node", "dist/server.js"]
