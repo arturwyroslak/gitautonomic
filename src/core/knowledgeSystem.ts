@@ -483,10 +483,13 @@ export class LearningFeedbackLoop {
         action: feedback.action,
         outcome: feedback.outcome,
         userRating: feedback.userRating,
-        comments: feedback.comments,
-        context: JSON.stringify(feedback.context),
-        timestamp: event.timestamp,
-        processed: false
+        metadata: JSON.stringify({
+          comments: feedback.comments,
+          context: feedback.context,
+          timestamp: event.timestamp,
+          processed: false
+        }),
+        createdAt: new Date()
       }
     });
 

@@ -173,3 +173,121 @@ model PatchLog {
   @@index([issueAgentId, iteration])
   @@index([issueAgentId, diffHash])
 }
+
+model AgentCheckRuns {
+  id                   String @id @default(cuid())
+  agentId              String @unique
+  planCheckId          Int
+  execCheckId          Int
+  evalCheckId          Int
+  securityCheckId      Int
+  performanceCheckId   Int
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([agentId])
+}
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  timestamp  DateTime @default(now())
+  agentId    String?
+  event      String
+  details    String?
+  success    Boolean
+
+  @@index([timestamp])
+  @@index([agentId])
+}
+
+model StakeholderReview {
+  id                String   @id
+  agentId           String
+  planVersion       Int
+  status            String
+  requiredApprovers String   // JSON array
+  approvedBy        String   // JSON array
+  createdAt         DateTime
+  updatedAt         DateTime @updatedAt
+
+  @@index([agentId])
+}
+
+model PlanVersion {
+  id          String   @id
+  agentId     String
+  version     Int
+  planData    String   // JSON
+  conflicts   String   // JSON
+  createdAt   DateTime
+  updatedAt   DateTime @updatedAt
+
+  @@index([agentId, version])
+}
+
+model PlanUpdateLog {
+  id        String   @id
+  agentId   String
+  version   Int
+  changes   String   // JSON
+  reason    String?
+  createdAt DateTime
+  updatedAt DateTime @updatedAt
+
+  @@index([agentId, version])
+}
+
+model EmbeddingDocument {
+  id        String   @id
+  content   String
+  metadata  String   // JSON
+  embedding String   // JSON
+  type      String
+  timestamp DateTime
+
+  @@index([type])
+}
+
+model KnowledgeNode {
+  id         String @id
+  type       String
+  name       String
+  properties String // JSON
+
+  @@index([type])
+}
+
+model KnowledgeRelationship {
+  id       String @id
+  sourceId String
+  targetId String
+  type     String
+  weight   Float
+  metadata String? // JSON
+
+  @@index([sourceId])
+  @@index([targetId])
+}
+
+model FeedbackEvent {
+  id         String   @id
+  agentId    String
+  action     String
+  outcome    String
+  userRating Int?
+  metadata   String?  // JSON
+  createdAt  DateTime @default(now())
+
+  @@index([agentId])
+}
+
+model EnhancedAnalysis {
+  id             String   @id
+  owner          String
+  repo           String
+  analysisReport String   // JSON
+  actionPlan     String   // JSON
+  createdAt      DateTime
+
+  @@index([owner, repo])
+}
