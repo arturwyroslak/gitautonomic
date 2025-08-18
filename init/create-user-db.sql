@@ -2,7 +2,7 @@ DO
 $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'gitautonomic') THEN
-    CREATE ROLE gitautonomic WITH LOGIN PASSWORD 'change_me_strong_password';
+    CREATE ROLE gitautonomic WITH LOGIN PASSWORD '12345678';
     ALTER ROLE gitautonomic CREATEDB;
   END IF;
 END
