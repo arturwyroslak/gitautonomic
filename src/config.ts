@@ -1,14 +1,9 @@
 import 'dotenv/config';
-import fs from 'fs';
-import path from 'path';
 
 export const cfg = {
   // GitHub App
   appId: process.env.GITHUB_APP_ID!,
-  privateKey: fs.readFileSync(
-    path.resolve(process.env.GITHUB_APP_PRIVATE_KEY!), // ścieżka do pliku montowanego w kontenerze
-    'utf8'
-  ),
+  privateKey: (process.env.GITHUB_APP_PRIVATE_KEY || '').replace(/\\n/g, '\\n'),
   webhookSecret: process.env.GITHUB_WEBHOOK_SECRET!,
 
   // Database & Redis
