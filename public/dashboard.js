@@ -39,13 +39,19 @@ class GitAutonomicDashboard {
         this.startRealTimeUpdates();
     }
 
+    // Helper: build fetch options with optional Authorization and always include cookies
+    authFetchOptions(extra = {}) {
+        const token = this.getToken();
+        const headers = { ...(extra.headers || {}) };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        return { credentials: 'include', ...extra, headers };
+    }
+
     async loadUser() {
         try {
-            const response = await fetch('/api/auth/me', {
-                headers: {
-                    'Authorization': `Bearer ${this.getToken()}`
-                }
-            });
+            const response = await fetch('/api/auth/me', this.authFetchOptions());
 
             if (response.ok) {
                 this.user = await response.json();
@@ -61,13 +67,8 @@ class GitAutonomicDashboard {
     }
 
     getToken() {
-        return localStorage.getItem('auth_token') || this.getCookie('auth_token');
-    }
-
-    getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
+        // Tylko localStorage – cookie httpOnly nie jest dostępne w JS
+        return localStorage.getItem('auth_token') || null;
     }
 
     updateUserInterface() {
@@ -155,11 +156,7 @@ class GitAutonomicDashboard {
 
     async loadStats() {
         try {
-            const response = await fetch('/api/dashboard/stats', {
-                headers: {
-                    'Authorization': `Bearer ${this.getToken()}`
-                }
-            });
+            const response = await fetch('/api/dashboard/stats', this.authFetchOptions());
 
             if (response.ok) {
                 this.stats = await response.json();
@@ -187,11 +184,7 @@ class GitAutonomicDashboard {
 
     async loadActivityFeed() {
         try {
-            const response = await fetch('/api/dashboard/activity', {
-                headers: {
-                    'Authorization': `Bearer ${this.getToken()}`
-                }
-            });
+            const response = await fetch('/api/dashboard/activity', this.authFetchOptions());
 
             if (response.ok) {
                 const activities = await response.json();
@@ -348,11 +341,7 @@ class GitAutonomicDashboard {
 
     async loadRepositories() {
         try {
-            const response = await fetch('/api/dashboard/repositories', {
-                headers: {
-                    'Authorization': `Bearer ${this.getToken()}`
-                }
-            });
+            const response = await fetch('/api/dashboard/repositories', this.authFetchOptions());
 
             if (response.ok) {
                 const repositories = await response.json();
@@ -637,12 +626,13 @@ class GitAutonomicDashboard {
     }
 
     connectRepository() {
-        window.open('/auth/github', '_blank', 'width=600,height=700');
+        // Poprawiony URL – router auth jest pod /api/auth
+        window.open('/api/auth/github', '_blank', 'width=600,height=700');
     }
 
     async logout() {
         try {
-            await fetch('/api/auth/logout', { method: 'POST' });
+            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
             localStorage.removeItem('auth_token');
             window.location.href = '/';
         } catch (error) {
