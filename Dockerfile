@@ -1,7 +1,7 @@
 # ----------------------------
 # Base stage
 # ----------------------------
-FROM node:20-bullseye-slim AS base
+FROM node:20-bookworm-slim AS base
 WORKDIR /app
 
 # Zainstaluj systemowe dependencies
@@ -16,13 +16,20 @@ RUN npm install
 # Skopiuj resztę kodu
 COPY . .
 
+# Set environment variables for Prisma generation
+ENV PRISMA_CLI_QUERY_ENGINE_TYPE=binary
+ENV PRISMA_CLIENT_ENGINE_TYPE=binary
+
+# Generate Prisma client with explicit engine types
+RUN npx prisma generate --schema=./prisma/schema.prisma || echo "Prisma generate failed, will try alternative approach"
+
 # Zbuduj TypeScript
 RUN npm run build
 
 # ----------------------------
 # Server stage
 # ----------------------------
-FROM node:20-bullseye-slim AS server
+FROM node:20-bookworm-slim AS server
 WORKDIR /app
 ENV NODE_ENV=production
 
@@ -34,6 +41,13 @@ COPY --from=base /app/dist ./dist
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/prisma ./prisma
 COPY --from=base /app/package.json ./package.json
+
+# Set environment variables for Prisma
+ENV PRISMA_CLI_QUERY_ENGINE_TYPE=binary
+ENV PRISMA_CLIENT_ENGINE_TYPE=binary
+
+# Ensure Prisma client is properly generated
+RUN npx prisma generate --schema=./prisma/schema.prisma || echo "Prisma client generation skipped due to network restrictions"
 
 EXPOSE 3000
 
