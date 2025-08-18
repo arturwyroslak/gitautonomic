@@ -48,7 +48,7 @@ app.post('/maintenance/sweep', async (_req,res)=>{
   res.json({ status:'queued' });
 });
 
-const port = Number(process.env.PORT || 3000);
+const port = Number(process.env.PORT || 3300);
 app.listen(port, ()=> log.info({ port }, 'Server started'));
 
 setInterval(()=> {

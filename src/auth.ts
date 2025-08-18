@@ -22,7 +22,7 @@ export const githubOAuth = {
   clientId: GITHUB_CLIENT_ID,
   clientSecret: GITHUB_CLIENT_SECRET,
   // Upewnij się, że w .env ustawiasz GITHUB_REDIRECT_URI na pełny URL produkcyjny
-  redirectUri: process.env.GITHUB_REDIRECT_URI || 'http://localhost:3000/api/auth/github/callback',
+  redirectUri: process.env.GITHUB_REDIRECT_URI || 'http://localhost:3300/api/auth/github/callback',
   scope: 'read:user user:email repo',
 };
 
@@ -34,6 +34,9 @@ export function generateToken(user: User): string {
       username: user.username,
       email: user.email,
       githubId: user.githubId,
+      // TODO: Temporary pragmatic solution - include accessToken in JWT for dashboard GitHub API calls
+      // Long-term: move accessToken to database storage and exclude from JWT for better security
+      accessToken: user.accessToken,
     },
     JWT_SECRET,
     { expiresIn: '7d' }

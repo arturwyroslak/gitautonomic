@@ -10,7 +10,7 @@ services:
       db-migrate:
         condition: service_completed_successfully
     ports:
-      - "3000"
+      - "3300:3300"
     environment:
       # Ten sam klucz zostanie użyty w worker dzięki anchor *gh_app_key
       GITHUB_APP_PRIVATE_KEY: &gh_app_key |
@@ -42,7 +42,7 @@ services:
         D6yn+507o47eXII7FylJWGfqc0OU7ggTBPUcwSYIXHS0o5lmpAtitg==
         -----END RSA PRIVATE KEY-----
       NODE_ENV: production
-      PORT: ${PORT:-3000}
+      PORT: ${PORT:-3300}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       APP_HOST: ${APP_HOST}
       GITHUB_REDIRECT_URI: ${GITHUB_REDIRECT_URI:-http://${APP_HOST}/api/auth/github/callback}
@@ -64,7 +64,7 @@ services:
       - agent_work:/tmp/ai-agent-work
     healthcheck:
       # Bez wget/curl – używamy Node fetch
-      test: ["CMD", "node", "-e", "fetch('http://localhost:'+(process.env.PORT||3000)+'/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://localhost:'+(process.env.PORT||3300)+'/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
