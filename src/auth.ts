@@ -21,7 +21,8 @@ export interface User {
 export const githubOAuth = {
   clientId: GITHUB_CLIENT_ID,
   clientSecret: GITHUB_CLIENT_SECRET,
-  redirectUri: process.env.GITHUB_REDIRECT_URI || 'http://localhost:3000/auth/github/callback',
+  // Upewnij się, że w .env ustawiasz GITHUB_REDIRECT_URI na pełny URL produkcyjny
+  redirectUri: process.env.GITHUB_REDIRECT_URI || 'http://localhost:3000/api/auth/github/callback',
   scope: 'read:user user:email repo',
 };
 
@@ -53,16 +54,23 @@ export function verifyToken(token: string): User | null {
 // Middleware to authenticate requests
 export function authenticateToken(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  let token: string | undefined;
 
+  // 1) Bearer token z nagłówka
+  if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+    const candidate = authHeader.slice(7).trim();
+    if (candidate && candidate !== 'undefined' && candidate !== 'null') {
+      token = candidate;
+    }
+  }
 
-
-
-
-
-
-
-
+  // 2) Fallback: httpOnly cookie ustawione po OAuth
+  if (!token && (req as any).cookies) {
+    const cookieToken = (req as any).cookies['auth_token'];
+    if (cookieToken && cookieToken !== 'undefined' && cookieToken !== 'null') {
+      token = cookieToken;
+    }
+  }
 
   if (!token) {
     return res.status(401).json({ error: 'Access token required' });
