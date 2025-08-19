@@ -16,7 +16,12 @@
     "test": "vitest",
     "migrate": "prisma migrate deploy",
     "prisma:gen": "prisma generate",
-    "seed": "tsx src/seed.ts"
+    "seed": "tsx src/seed.ts",
+    "eval:demo": "tsx eval-runner.js demo",
+    "eval:list": "tsx eval-runner.js list",
+    "eval:run": "tsx eval-runner.js run",
+    "eval:config": "tsx eval-runner.js config",
+    "eval:help": "tsx eval-runner.js help"
   },
   "dependencies": {
     "@babel/generator": "^7.25.0",
