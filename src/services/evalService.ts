@@ -13,6 +13,18 @@ export async function evaluateAgent(agentId: string) {
   const provider = await resolveProvider(Number(agent.installationId));
   if (!provider.evaluateAndSuggest) return;
 
+  // Fetch repository files for evaluation context
+  const { repoFileService } = await import('./repoFileService.js');
+  const repoSnapshot = await repoFileService.getRepoSnapshot(
+    agent.installationId.toString(),
+    agent.owner || '',
+    agent.repo || '',
+    agent.branchName || 'main',
+    50,
+    25000
+  );
+  const repoFiles = repoSnapshot.files.map(f => f.path);
+
   const completed = agent.tasks.filter((t: any) => t.status === 'done').map((t: any) => t.externalId);
   const currentTasks = agent.tasks.filter((t: any) => t.status !== 'done').map((t: any) => ({
     id: t.externalId,
@@ -27,7 +39,7 @@ export async function evaluateAgent(agentId: string) {
     issueBody: '<hidden>',
     currentTasks,
     completedTaskIds: completed,
-    repoFiles: [],
+    repoFiles,
     recentCommitsMeta: [],
     planVersion: agent.planVersion
   });
