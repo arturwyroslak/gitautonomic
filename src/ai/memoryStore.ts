@@ -1,8 +1,9 @@
 import { prisma } from "../storage/prisma.js";
 import { randomUUID } from "node:crypto";
 import { cfg } from "../config.js";
+import { embeddingService } from "../services/embeddingService.js";
 
-export type MemoryType = 'strategic' | 'technical' | 'risk' | 'evaluation' | 'compression';
+export type MemoryType = 'strategic' | 'technical' | 'risk' | 'evaluation' | 'compression' | 'context' | 'learning' | 'feedback';
 
 export interface MemoryItem {
   id: string;
@@ -11,6 +12,7 @@ export interface MemoryItem {
   vector?: number[];
   meta?: Record<string, any>;
   ts: number;
+  similarity?: number;
 }
 
 interface MemoryInput {
@@ -23,18 +25,29 @@ interface MemoryInput {
 
 export class MemoryStore {
   items: Map<string, MemoryItem> = new Map();
-  embedder?: (text: string) => Promise<number[]>;
   
-  constructor(embedder?: (text: string) => Promise<number[]>) { 
-    this.embedder = embedder; 
+  constructor() {
+    // Use the embedding service for vector operations
   }
   
   async add(type: string, content: string, meta: Record<string, any> = {}): Promise<MemoryItem> {
     const id = `${type}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
-    const vector = this.embedder ? await this.embedder(content) : undefined;
-    const item: MemoryItem = { id, type, content, meta, vector, ts: Date.now() };
-    this.items.set(id, item);
-    return item;
+    
+    try {
+      // Generate embedding using the embedding service
+      const embedding = await embeddingService.generateEmbedding(content, { type, ...meta });
+      const vector = embedding.vector;
+      
+      const item: MemoryItem = { id, type, content, meta, vector, ts: Date.now() };
+      this.items.set(id, item);
+      
+      return item;
+    } catch (error) {
+      // Fallback without embeddings if service fails
+      const item: MemoryItem = { id, type, content, meta, ts: Date.now() };
+      this.items.set(id, item);
+      return item;
+    }
   }
   
   list(type?: string) { 
@@ -47,9 +60,96 @@ export class MemoryStore {
   }
   
   async search(query: string, k = 5): Promise<MemoryItem[]> {
-    const qv = this.embedder ? await this.embedder(query) : undefined;
-    const scored = this.list().map(m => ({ m, score: qv && m.vector ? this.similarity(qv, m.vector) : 0 }));
-    return scored.sort((a,b)=>b.score-a.score).slice(0,k).map(s=>s.m);
+    try {
+      // Use embedding service for semantic search
+      const results = await embeddingService.findSimilar(query, k, 0.7);
+      
+      // Map results back to MemoryItems
+      const items: MemoryItem[] = [];
+      for (const result of results) {
+        const item = this.items.get(result.id);
+        if (item) {
+          items.push({ ...item, similarity: result.similarity });
+        }
+      }
+      
+      return items;
+    } catch (error) {
+      // Fallback to simple text search
+      return this.simpleTextSearch(query, k);
+    }
+  }
+
+  private simpleTextSearch(query: string, k: number): MemoryItem[] {
+    const queryLower = query.toLowerCase();
+    const matches = Array.from(this.items.values())
+      .filter(item => item.content.toLowerCase().includes(queryLower))
+      .sort((a, b) => b.ts - a.ts)
+      .slice(0, k);
+    
+    return matches;
+  }
+
+  async searchByType(type: string, query?: string, k = 5): Promise<MemoryItem[]> {
+    const typeItems = this.list(type);
+    
+    if (!query) {
+      return typeItems.slice(0, k);
+    }
+    
+    try {
+      // Filter by type in metadata
+      const results = await embeddingService.findSimilar(query, k * 2, 0.6, { type });
+      
+      const items: MemoryItem[] = [];
+      for (const result of results) {
+        const item = this.items.get(result.id);
+        if (item && item.type === type) {
+          items.push({ ...item, similarity: result.similarity });
+        }
+      }
+      
+      return items.slice(0, k);
+    } catch (error) {
+      return typeItems.filter(item => 
+        item.content.toLowerCase().includes(query.toLowerCase())
+      ).slice(0, k);
+    }
+  }
+
+  async addContextMemory(context: string, metadata: Record<string, any> = {}): Promise<MemoryItem> {
+    return await this.add('context', context, {
+      ...metadata,
+      timestamp: new Date().toISOString(),
+      priority: metadata.priority || 'normal'
+    });
+  }
+
+  async addLearningMemory(learning: string, metadata: Record<string, any> = {}): Promise<MemoryItem> {
+    return await this.add('learning', learning, {
+      ...metadata,
+      timestamp: new Date().toISOString(),
+      category: metadata.category || 'general'
+    });
+  }
+
+  async getRecentMemories(type?: string, limit = 10): Promise<MemoryItem[]> {
+    const items = type ? this.list(type) : Array.from(this.items.values());
+    return items
+      .sort((a, b) => b.ts - a.ts)
+      .slice(0, limit);
+  }
+
+  async getRelevantContext(query: string, maxItems = 5): Promise<string> {
+    const relevantMemories = await this.search(query, maxItems);
+    
+    if (relevantMemories.length === 0) {
+      return 'No relevant context found.';
+    }
+    
+    return relevantMemories
+      .map(memory => `[${memory.type}] ${memory.content}`)
+      .join('\n\n');
   }
 }
 
@@ -103,7 +203,10 @@ export async function selectiveRetention(issueAgentId: string) {
     technical: cfg.memory.maxTechnical,
     risk: 40,
     evaluation: 60,
-    compression: 16
+    compression: 16,
+    context: 30,
+    learning: 20,
+    feedback: 10
   };
 
   for (const [type, max] of Object.entries(limits)) {
