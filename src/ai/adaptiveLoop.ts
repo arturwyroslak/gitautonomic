@@ -70,9 +70,19 @@ export async function runAdaptiveIteration(agentId: string) {
   const provider = await resolveProvider(Number(agent.installationId));
 
   const octo = await getInstallationOctokit(agent.installationId.toString());
-  // Pobierz subset plików (na razie minimalnie – listing repo root)
-  const repoFiles: { path: string; content: string }[] = [];
-  // TODO: implement real fetch (git ls-tree + get contents) lub workspace snapshot
+  
+  // Fetch relevant repository files for context
+  const { repoFileService } = await import('../services/repoFileService.js');
+  const taskPaths = selected.map((t: any) => t.paths || []).flat();
+  const repoFilesData = await repoFileService.getRelevantFiles(
+    agent.installationId.toString(),
+    agent.owner,
+    agent.repo,
+    taskPaths,
+    agent.branchName,
+    50
+  );
+  const repoFiles = repoFilesData.map(f => ({ path: f.path, content: f.content }));
 
   const cwm = new ContextWindowManager(30_000);
   const trimmed = cwm.trimFiles(repoFiles, selected as unknown as PlanTask[]);
@@ -180,10 +190,23 @@ export async function ensurePlan(agentId: string) {
 
   const provider = await resolveProvider(Number(agent.installationId));
   const strategicBundle = await fetchStrategicBundle(agent.id);
+  
+  // Fetch repository files for planning context
+  const { repoFileService } = await import('../services/repoFileService.js');
+  const repoSnapshot = await repoFileService.getRepoSnapshot(
+    agent.installationId.toString(),
+    agent.owner,
+    agent.repo,
+    agent.branchName,
+    100,
+    50000
+  );
+  const repoFiles = repoSnapshot.files.map(f => f.path);
+  
   const planRaw = await provider.generatePlan({
     issueTitle: agent.issueTitle,
     issueBody: '<hidden>',
-    repoFiles: [],
+    repoFiles,
     historicalSignals: {
       previousPlanExists: !!agent.planCommitSha,
       iterations: agent.iterations,
