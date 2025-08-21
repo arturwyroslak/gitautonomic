@@ -152,7 +152,7 @@ export class EnhancedIntegrationService {
       await memoryStore.storeBestPractice(
         suggestion.suggestion,
         'performance',
-        [suggestion.description]
+        suggestion.description
       );
     }
     
