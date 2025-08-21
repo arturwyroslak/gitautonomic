@@ -10,7 +10,7 @@ export interface BashSession {
   events: EventEmitter;
   cwd: string;
   isActive: boolean;
-  timeout?: NodeJS.Timeout;
+  timeout?: any;
 }
 
 export interface BashCommandOptions {
