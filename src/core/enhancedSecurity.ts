@@ -181,7 +181,7 @@ export class EnhancedSecurityEngine extends PolicyEngine {
     
     for (const [ruleName, rule] of this.ownershipRules) {
       for (const pathPattern of rule.paths) {
-        if (this.matchesPattern(filePath, pathPattern)) {
+        if (this.matchesFilePattern(filePath, pathPattern)) {
           applicableRules.push(rule);
           break;
         }
@@ -191,7 +191,7 @@ export class EnhancedSecurityEngine extends PolicyEngine {
     return applicableRules;
   }
 
-  private matchesPattern(filePath: string, pattern: string): boolean {
+  private matchesFilePattern(filePath: string, pattern: string): boolean {
     // Simple glob pattern matching
     const regexPattern = pattern
       .replace(/\*\*/g, '.*')
