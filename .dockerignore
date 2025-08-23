@@ -1,0 +1,85 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+
+# Build output
+dist/
+build/
+
+# Test coverage
+coverage/
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation (except README)
+docs/
+*.md
+!README.md
+
+# Development files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+
+# Test files
+tests/
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Prisma migrations (already copied from builder stage)
+prisma/migrations/
+
+# Private keys and secrets
+*.pem
+private-key.pem
+
+# Agent work directory (will be mounted as volume)
+agent-work/
