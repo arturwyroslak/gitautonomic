@@ -36,14 +36,15 @@ describe("GitAutonomic Core Services", () => {
   describe("IntelligentRefactoringEngine", () => {
     it("should analyze refactoring opportunities", async () => {
       const engine = new IntelligentRefactoringEngine();
-      const opportunities = await engine.analyzeRefactoringOpportunities("/tmp/test");
+      const opportunities = await engine.analyzeRefactoringOpportunities("/tmp/test-project");
       expect(Array.isArray(opportunities)).toBe(true);
       expect(opportunities.length).toBeGreaterThan(0);
     });
 
     it("should have valid refactoring opportunity structure", async () => {
       const engine = new IntelligentRefactoringEngine();
-      const opportunities = await engine.analyzeRefactoringOpportunities("/tmp/test");
+      const opportunities = await engine.analyzeRefactoringOpportunities("/tmp/test-project");
+      expect(opportunities.length).toBeGreaterThan(0);
       const opp = opportunities[0];
       expect(opp).toHaveProperty("type");
       expect(opp).toHaveProperty("description");
@@ -56,7 +57,7 @@ describe("GitAutonomic Core Services", () => {
   describe("MigrationAssistant", () => {
     it("should create migration plan", async () => {
       const assistant = new MigrationAssistant();
-      const plan = await assistant.createMigrationPlan("/tmp/test", "typescript");
+      const plan = await assistant.createMigrationPlan("/tmp/test-project", "typescript");
       expect(plan).toHaveProperty("sourceLanguage");
       expect(plan).toHaveProperty("targetLanguage");
       expect(plan.targetLanguage).toBe("typescript");

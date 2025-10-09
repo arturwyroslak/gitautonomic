@@ -8,7 +8,7 @@ describe('GitAutonomic Development Continuation Features', () => {
   describe('IntelligentRefactoringEngine - Enhanced Implementation', () => {
     it('should detect long methods in test files', async () => {
       const engine = new IntelligentRefactoringEngine();
-      const opportunities = await engine.analyzeRefactoringOpportunities('/tmp/test');
+      const opportunities = await engine.analyzeRefactoringOpportunities('/tmp/test-project');
       
       expect(Array.isArray(opportunities)).toBe(true);
       expect(opportunities.length).toBeGreaterThan(0);
@@ -30,7 +30,7 @@ describe('GitAutonomic Development Continuation Features', () => {
 
     it('should detect complex conditionals', async () => {
       const engine = new IntelligentRefactoringEngine();
-      const opportunities = await engine.analyzeRefactoringOpportunities('/tmp/test');
+      const opportunities = await engine.analyzeRefactoringOpportunities('/tmp/test-project');
       
       // Should detect the complex conditional we created
       const complexConditional = opportunities.find(op => 
